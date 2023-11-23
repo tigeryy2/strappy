@@ -157,3 +157,6 @@ cython_debug/
 .idea/**/dictionaries
 .idea/**/shelf
 .idea/.gitignore
+
+# MACOS Specific files
+.DS_Store
