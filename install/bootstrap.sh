@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Function to add a line to a file only if the line doesn't already exist
 add_line_to_file_if_not_exist() {
@@ -48,7 +48,7 @@ fi
 
 # Add Homebrew to path as necessary
 if [[ "$USER_SHELL" == */zsh ]]; then
-    echo "Adding Homebrew to PATH via ~/.zshrc"
+    echo "Conditionally adding Homebrew to PATH via ~/.zshrc"
 
     # Detect Homebrew install location and update PATH
     HOMEBREW_PREFIX=$(brew --prefix)
@@ -66,7 +66,7 @@ brew install git python3
 
 # Add python to path if using Zsh
 if [[ "$USER_SHELL" == */zsh ]]; then
-    echo "Adding python3 and python to path via ~/.zshrc"
+    echo "Conditionally adding python3 and python to path via ~/.zshrc"
     # Add Python3 paths to the system PATH
     PYTHON3_PATH="$(brew --prefix python3)/bin"
     # Unversioned aliases usually are inside `/libexex/bin`
@@ -94,6 +94,28 @@ else
     echo "Strappy repository already exists at $TARGET_DIR."
 fi
 
+# Install Pipenv if not already installed
+if ! command -v pipenv &> /dev/null; then
+    echo "Installing Pipenv..."
+    pip install pipenv
+else
+    echo "Pipenv is already installed."
+fi
+
+# Install Oh My Zsh if not already installed
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    echo "Installing Oh My Zsh (unattended mode)..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+    # Check if .zshrc.pre-oh-my-zsh exists and append its contents to .zshrc
+    if [ -f "$HOME/.zshrc.pre-oh-my-zsh" ]; then
+        echo "Adding contents of .zshrc.pre-oh-my-zsh into the end of the new .zshrc"
+        echo -e "\n$(cat "$HOME/.zshrc.pre-oh-my-zsh")" >> "$HOME/.zshrc"
+    fi
+else
+    echo "Oh My Zsh is already installed."
+fi
+
 echo "Saving logs to ${LOG_DIR}"
 # Create the log directory if it doesn't exist
 mkdir -p "$LOG_DIR"
@@ -109,3 +131,12 @@ mv "$LOG_FILE" "$TARGET_LOG_FILE"
 mv "$ZSHRC_BACKUP" "$LOG_DIR"
 
 echo "Setup complete."
+
+# Check if we're not already using Oh My Zsh
+if [ -z "$ZSH_VERSION" ] || [ -z "$ZSH" ]; then
+    echo "Switching to Zsh..."
+    # switch to oh-my-zsh
+    exec zsh
+else
+    echo "Already running Oh My Zsh."
+fi
