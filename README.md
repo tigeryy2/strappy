@@ -1,9 +1,8 @@
-# python-template
-Template repo for Python based projects
+# strappy
+Bootstrapped setup tool. Handles install of developer toolchains and standard applications.
+Developed for MacOS on my Apple Silicon Macbook Air... not tested on other environments.
 
-## Installation
-A `setup.py` has been provided to allow the package to be installed via pip.
-1. Clone the project using git
-2. Create the pipenv environment
-3. Run `pipenv install -e .`
-   1. This installs the project in editable mode
+## Bootstrap
+```bash
+curl -fsSL https://raw.githubusercontent.com/tigeryy2/strappy/main/install/bootstrap.sh | bash
+```
