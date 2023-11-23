@@ -37,6 +37,11 @@ if ! command -v brew &> /dev/null
 then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add command to `.zprofile so that homebrew to PATH at terminal startup
+    echo 'eval $(/opt/homebrew/bin/brew shellenv)' >> $HOME/.zprofile
+    # Add homebrew to path in current terminal
+    eval "$(/opt/homebrew/bin/brew shellenv)"
 else
     echo "Homebrew is already installed."
 fi
