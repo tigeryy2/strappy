@@ -102,6 +102,12 @@ else
     echo "Pipenv is already installed."
 fi
 
+# Initialize Pipenv environment in the strappy repository
+if [ -d "$TARGET_DIR" ]; then
+    echo "Initializing Pipenv environment for Strappy..."
+    pipenv install
+fi
+
 # Install Oh My Zsh if not already installed
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     echo "Installing Oh My Zsh (unattended mode)..."
