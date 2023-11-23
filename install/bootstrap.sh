@@ -4,8 +4,33 @@
 add_line_to_file_if_not_exist() {
     local line=$1
     local file=$2
-    grep -qF -- "$line" "$file" || echo "$line" >> "$file"
+    # Check if the line exists in the file
+    if ! grep -qF -- "$line" "$file"; then
+        # Append the line with a preceding newline, handling the case of no newline at the end of the file
+        echo -e "\n$line" >> "$file"
+    fi
 }
+
+# Variables
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+TEMP_DIR="/tmp/strappy"
+LOG_FILE="${TEMP_DIR}/$TIMESTAMP.log"
+ZSHRC_BACKUP="$HOME/.zshrc_backup_$TIMESTAMP"
+USER_SHELL=$(dscl . -read /Users/$USER UserShell | awk '{print $2}')
+# Define the target directory for cloning strappy repository
+TARGET_DIR="$HOME/Documents/dev/strappy"
+# Define the target log directory in strappy repo
+LOG_DIR="$TARGET_DIR/logs"
+
+# Setup Temp dirs and log file
+mkdir -p "$TEMP_DIR"
+exec > >(tee "$LOG_FILE") 2>&1
+echo "Running bootstrap.sh at ${TIMESTAMP}"
+
+# Backup .zshrc file
+if [ -f "$HOME/.zshrc" ]; then
+    cp "$HOME/.zshrc" "$ZSHRC_BACKUP"
+fi
 
 # Install Homebrew
 if ! command -v brew &> /dev/null
@@ -16,31 +41,39 @@ else
     echo "Homebrew is already installed."
 fi
 
-# Configure Homebrew in Zsh
-if [ -n "$ZSH_VERSION" ]; then
-    echo "Configuring Homebrew for Zsh..."
+# Add Homebrew to path as necessary
+if [[ "$USER_SHELL" == */zsh ]]; then
+    echo "Adding Homebrew to PATH via ~/.zshrc"
 
     # Detect Homebrew install location and update PATH
     HOMEBREW_PREFIX=$(brew --prefix)
-    add_line_to_file_if_not_exist "export PATH=\"$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:\$PATH\"" ~/.zshrc
+    add_line_to_file_if_not_exist "export PATH=\"$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:$HOMEBREW_PREFIX/opt:\$PATH\"" ~/.zshrc
 
-    # Source the changes to .zshrc if needed
+    # Source the changes to .zshrc
     source ~/.zshrc
+else
+    echo "Warning: Install script untested for non-Zsh shells"
 fi
 
 # Install Git and Python3 using Homebrew
 echo "Installing Git and Python3..."
 brew install git python3
 
-# Add Python3 paths to the system PATH
-PYTHON3_PATH=$(python3 -m site --user-base)/bin
-add_line_to_file_if_not_exist "export PATH=\"$PYTHON3_PATH:\$PATH\"" ~/.zshrc
+# Add python to path if using Zsh
+if [[ "$USER_SHELL" == */zsh ]]; then
+    echo "Adding python3 and python to path via ~/.zshrc"
+    # Add Python3 paths to the system PATH
+    PYTHON3_PATH="$(brew --prefix python3)/bin"
+    # Unversioned aliases usually are inside `/libexex/bin`
+    PYTHON_PATH="$(brew --prefix python3)/libexec/bin"
 
-# Source the changes to .zshrc
-source ~/.zshrc
+    add_line_to_file_if_not_exist "export PATH=\"$PYTHON3_PATH:$PYTHON_PATH:\$PATH\"" ~/.zshrc
 
-# Define the target directory for cloning the repository
-TARGET_DIR="$HOME/Documents/dev/strappy"
+    # Source the changes to .zshrc
+    source ~/.zshrc
+else
+    echo "Warning: Untested for non-Zsh shells"
+fi
 
 # Create the parent directory if it doesn't exist
 if [ ! -d "$(dirname "$TARGET_DIR")" ]; then
@@ -56,5 +89,18 @@ else
     echo "Strappy repository already exists at $TARGET_DIR."
 fi
 
+echo "Saving logs to ${LOG_DIR}"
+# Create the log directory if it doesn't exist
+mkdir -p "$LOG_DIR"
+
+# Check for duplicate log file in the target directory and rename if necessary
+TARGET_LOG_FILE="$LOG_DIR/$(basename "$LOG_FILE")"
+if [ -f "$TARGET_LOG_FILE" ]; then
+    mv "$TARGET_LOG_FILE" "${TARGET_LOG_FILE}_backup_$(date '+%Y%m%d_%H%M%S')"
+fi
+
+# Copy the log file to strappy/logs
+mv "$LOG_FILE" "$TARGET_LOG_FILE"
+mv "$ZSHRC_BACKUP" "$LOG_DIR"
 
 echo "Setup complete."
