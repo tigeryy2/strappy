@@ -15,3 +15,5 @@ Framework for zsh configuration. Plugins, themes, and more.
 See [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
 
 To uninstall, run `uninstall_oh_my_zsh` from the zsh shell.
+
+### Devtoys
