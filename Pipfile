@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 black = "*"
+pydantic = "*"
+pytest = "*"
 
 [dev-packages]
 
