@@ -1,0 +1,20 @@
+[packages]
+#
+brew = [
+    "wget",
+]
+
+cask = [
+    "google-chrome",
+    "devtoys",
+    "iterm2",
+    "jetbrains-toolbox",
+    "pycharm",
+    "webstorm",
+    "fleet",
+    "slack",
+    "github",
+    "logi-options-plus",
+    "gimp",
+    "zoom",
+]
