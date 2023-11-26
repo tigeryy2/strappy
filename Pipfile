@@ -7,6 +7,8 @@ name = "pypi"
 black = "*"
 pydantic = "*"
 pytest = "*"
+python-dotenv = "*"
+strappy = {file = ".", editable = true}
 
 [dev-packages]
 
