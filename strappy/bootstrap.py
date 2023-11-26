@@ -3,7 +3,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-import dotenv
+from dotenv import load_dotenv
 
 from config import DOTFILES_DIR, INSTALL_IGNORE_FILES
 from config.dotfiles import DOTFILES_TO_OVERWRITE, DOTFILES_TO_APPEND
@@ -105,7 +105,7 @@ def install_dotfiles():
 
 def main():
     # environment and logging setup
-    dotenv.load_dotenv()
+    load_dotenv()
     Loggable.setup(log_path=LOG_DIR / "bootstrap_py.log")
 
     # reload the `DRY_RUN` after loading the dotenv file
