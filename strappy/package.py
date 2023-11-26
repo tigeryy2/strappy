@@ -150,8 +150,11 @@ class BrewPackage(Package):
             (match := re.search(r"==> Artifacts\n(.*) \(App\)\n", info_output))
             and (bundle_name := match.group(1))
         ):
-            self.logger.info(
-                f"Could not find bundle name for {self.name}:\n{info_output}"
+            self.logger.debug(
+                f"\n{f' Could not find bundle name for {self.name} ':=^80}"
+                f"\n'brew info --cask {self.name}' output:"
+                f"\n{info_output}"
+                f"\n{'=' * 80}\n"
             )
             return None
         self.logger.debug(f"Found bundle name: '{bundle_name}'")
@@ -341,5 +344,7 @@ def install_packages():
         f"Total packages installed: {len(installed_packages)}\n"
         f"Total packages skipped: {len(skipped_packages)}\n"
         f"Total packages failed: {len(failed_packages)}\n"
+        f"{'=' * 80}\n"
+        f"WARNING: Some packages may require system restart to complete installation\n"
         f"{'=' * 80}\n"
     )
