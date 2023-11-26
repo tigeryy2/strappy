@@ -52,6 +52,7 @@ def test_load_brew_packages():
 
         for package in packages:
             assert isinstance(package, BrewPackage)
+            assert package.name != ""
 
 
 def test_dry_run_install():

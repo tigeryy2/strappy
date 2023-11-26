@@ -22,6 +22,9 @@ class Package(Loggable):
     """
 
     name: str = ""
+    check_if_installed: bool = (
+        True  # check if the package is installed before installing it
+    )
 
     @property
     def dry_run(self) -> bool:
@@ -61,16 +64,21 @@ class Package(Loggable):
         """
         pass
 
-    def run_cmd(self, cmd: [str], capture_output: bool = False):
+    def run_cmd(
+        self, cmd: list[str] | str, capture_output: bool = False, shell: bool = False
+    ):
         """
         Run a shell command using subprocess.run
         """
+        if shell and isinstance(cmd, list):
+            cmd = " ".join(cmd)
+
         self.logger.debug(f"Running '{' '.join(cmd)}'")
 
         # shell should be false as we are passing a list of args
         # capture output is generally false to allow the user to interact with the installation process if needed
         result = subprocess.run(
-            cmd, check=True, shell=False, capture_output=capture_output, text=True
+            cmd, check=True, shell=shell, capture_output=capture_output, text=True
         )
 
         # if we captured the output, log it
@@ -92,9 +100,24 @@ class BrewPackage(Package):
 
     name: str = ""  # homebrew name of the package
     use_cask: bool = False  # true for gui apps
-    check_if_installed: bool = (
-        True  # check if the package is installed before installing it
-    )
+
+    @property
+    def dry_run(self) -> bool:
+        """
+        Check if we are running in dry run mode
+        When true, don't actually run any commands
+
+        If `DRY_RUN` exists and is not "false", then default dry_run to True
+        This prevents accidental package installations if the user misspells the value
+
+
+        :return:
+        """
+        return (
+            True
+            if (val := os.environ.get("DRY_RUN")) is not None and val.lower() != "false"
+            else False
+        )
 
     @property
     def is_installed(self) -> bool:
@@ -225,11 +248,11 @@ class BrewPackage(Package):
             install_cmd.append("--cask")
         install_cmd.append(self.name)
 
-        self.logger.info(f"Installing {self.name} with '{' '.join(install_cmd)}'")
         if self.dry_run:
             self.logger.info("Dry run, skipping installation")
             return False
 
+        self.logger.info(f"Installing {self.name} with '{' '.join(install_cmd)}'")
         self.run_cmd(install_cmd)
 
         # run the post install hook
@@ -281,6 +304,8 @@ def load_packages() -> [BrewPackage]:
     # detect all classes that inherit from `Package` in the `config.brew_packages` module
     # iterate over files in directory
     for file in BREW_PACKAGES_PATH.iterdir():
+        Loggable.log().debug(f"Checking file '{file.name}'")
+
         # ignore directories
         if file.is_dir():
             Package.log().warning(f"'{file.name}' is a directory, skipping it")
@@ -310,7 +335,11 @@ def load_packages() -> [BrewPackage]:
             if is_instance_or_subclass_of_package(attr):
                 # if the attribute is a class that inherits from `Package`, add it to the list of packages
                 package = attr()
-                Package.log().debug(f"Found package '{package.name}'")
+                if package.name == "":
+                    Package.log().warning(
+                        f"Package '{package}' does not have a name, skipping it"
+                    )
+                    continue
                 packages.append(package)
 
     return packages
