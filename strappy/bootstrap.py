@@ -3,12 +3,16 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from config import DOTFILES_DIR, INSTALL_IGNORE_FILES
 from config.dotfiles import DOTFILES_TO_OVERWRITE, DOTFILES_TO_APPEND
 from logs import LOG_DIR
+from strappy import HOME
+from strappy.package import install_packages
 from strappy.util.loggable import Loggable
 
-HOME = Path("~").expanduser()
+DRY_RUN: bool = os.environ.get("DRY_RUN", False)
 
 
 def merge_dotfiles(current: Path, new_file: Path) -> Path:
@@ -34,6 +38,10 @@ def merge_dotfiles(current: Path, new_file: Path) -> Path:
                 continue
             # otherwise, append it to the current dotfile
             lines_appended.append(line)
+
+            # if this is a dry run, don't actually write to the file
+            if DRY_RUN:
+                continue
             curr.write(f"\n{line}")
 
     Loggable.log().info(
@@ -45,6 +53,12 @@ def merge_dotfiles(current: Path, new_file: Path) -> Path:
 
 
 def install_dotfiles():
+    Loggable.log().info(f"\n{' Installing Dotfiles ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping dotfile installation")
+        return
+
     """Install dotfiles from the dotfiles directory"""
     for file in DOTFILES_DIR.iterdir():
         if not file.is_file():
@@ -90,8 +104,19 @@ def install_dotfiles():
 
 
 def main():
+    # environment and logging setup
+    load_dotenv()
     Loggable.setup(log_path=LOG_DIR / "bootstrap_py.log")
+
+    # reload the `DRY_RUN` after loading the dotenv file
+    global DRY_RUN
+    DRY_RUN = os.environ.get("DRY_RUN", False)
+
+    # install dotfiles
     install_dotfiles()
+
+    # install packages
+    install_packages()
 
 
 if __name__ == "__main__":
