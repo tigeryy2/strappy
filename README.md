@@ -40,8 +40,9 @@ place "cask" packages under the `[packages][cask]` section.
 
 For example, to install `wget`, add `wget` to the list under `[packages][brew]`.
 
-For packages that require additional configuration, such as `nvm` plugins, create a new class that inherits from
-`Package` or `BrewPackage` and implement the `install` method.
+For packages that require additional configuration, such as `nvm`, create a new class that inherits from
+`Package` or `BrewPackage` and implement the `install` method. Add additional scripting to the `post_install_hook`
+for any additional configuration that needs to be done after the package is installed.
 
 ## Manual Installation
 
