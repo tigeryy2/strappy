@@ -2,6 +2,7 @@
 #
 brew = [
     "wget",
+    "pyenv",
 ]
 
 cask = [
