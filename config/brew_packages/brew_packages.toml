@@ -3,6 +3,7 @@
 brew = [
     "wget",
     "pyenv",
+    "pipx",
 ]
 
 cask = [
