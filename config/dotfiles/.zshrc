@@ -7,3 +7,6 @@ export PYENV_ROOT="$HOME/.pyenv"
 eval "$(pyenv init -)"
 # the following seems to work better on macOS
 eval "$(pyenv init --path)"
+
+# Point pip to configuration file that's loaded last
+export PIP_CONFIG_FILE="$HOME/pip.conf"
