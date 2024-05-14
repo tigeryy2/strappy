@@ -97,7 +97,7 @@ fi
 # Install Pipenv if not already installed
 if ! command -v pipenv &> /dev/null; then
     echo "Installing Pipenv..."
-    pip install pipenv
+    brew install pipenv
 else
     echo "Pipenv is already installed."
 fi
