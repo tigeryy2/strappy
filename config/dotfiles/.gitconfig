@@ -42,3 +42,5 @@
 [user]
 	name = Tiger
 	email = tigeryyang@gmail.com
+[credential]
+	helper = osxkeychain
