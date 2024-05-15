@@ -6,7 +6,8 @@ brew = [
     "pipx",
     "tree",
     "lsd",
-    "tldr",  # dev docs and manuals
+    "tldr",  # dev docs and manuals, e.g. `tldr pyenv`
+    "node",
 ]
 
 cask = [
