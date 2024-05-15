@@ -24,4 +24,5 @@ cask = [
     "gimp",
     "zoom",
     "postman",
+    "rectangle",
 ]
