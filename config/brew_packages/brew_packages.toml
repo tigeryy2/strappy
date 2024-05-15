@@ -4,6 +4,9 @@ brew = [
     "wget",
     "pyenv",
     "pipx",
+    "tree",
+    "lsd",
+    "tldr",  # dev docs and manuals
 ]
 
 cask = [
@@ -19,4 +22,5 @@ cask = [
     "logi-options-plus",
     "gimp",
     "zoom",
+    "postman",
 ]
