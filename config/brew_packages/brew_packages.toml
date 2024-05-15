@@ -3,12 +3,14 @@
 brew = [
     "wget",
     "pyenv",
+    "pyenv-virtualenv",
     "pipx",
     "tree",
     "lsd",
     "tldr",  # dev docs and manuals, e.g. `tldr pyenv`
     "node",
     "autojump",
+    "fzf",
 ]
 
 cask = [

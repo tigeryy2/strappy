@@ -12,3 +12,4 @@ eval "$(pyenv init --path)"
 export PIP_CONFIG_FILE="$HOME/pip.conf"
 
 [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
+eval "$(fzf --zsh)"
