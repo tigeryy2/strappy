@@ -14,3 +14,8 @@ export PIP_CONFIG_FILE="$HOME/pip.conf"
 
 [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 eval "$(fzf --zsh)"
+
+# Disable press-and-hold for keys if not already set, helpful for ideaVim
+if [[ $(defaults read -g ApplePressAndHoldEnabled) != 0 ]]; then
+    defaults write -g ApplePressAndHoldEnabled -bool false
+fi
