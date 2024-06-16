@@ -109,7 +109,7 @@ def main():
 
     # reload the `DRY_RUN` after loading the dotenv file
     global DRY_RUN
-    DRY_RUN  = os.environ.get("DRY_RUN", False).lower() == "true"
+    DRY_RUN = os.environ.get("DRY_RUN", False).lower() == "true"
 
     # install dotfiles
     install_dotfiles()
