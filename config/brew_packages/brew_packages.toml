@@ -12,6 +12,7 @@ brew = [
     "autojump",
     "fzf",
     "uv",
+    "pip-tools"
 ]
 
 cask = [
