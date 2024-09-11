@@ -3,16 +3,15 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 from config import DOTFILES_DIR, INSTALL_IGNORE_FILES
 from config.dotfiles import DOTFILES_TO_OVERWRITE, DOTFILES_TO_APPEND
+from dotenv import load_dotenv
 from logs import LOG_DIR
 from strappy import HOME
 from strappy.package import install_packages
 from strappy.util.loggable import Loggable
 
-DRY_RUN: bool = os.environ.get("DRY_RUN", False)
+DRY_RUN: bool = os.environ.get("DRY_RUN", False).lower() == "true"
 
 
 def merge_dotfiles(current: Path, new_file: Path) -> Path:
@@ -110,7 +109,7 @@ def main():
 
     # reload the `DRY_RUN` after loading the dotenv file
     global DRY_RUN
-    DRY_RUN = os.environ.get("DRY_RUN", False)
+    DRY_RUN = os.environ.get("DRY_RUN", False).lower() == "true"
 
     # install dotfiles
     install_dotfiles()
