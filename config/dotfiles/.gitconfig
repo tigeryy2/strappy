@@ -44,3 +44,6 @@
 	email = tigeryyang@gmail.com
 [credential]
 	helper = osxkeychain
+[safe]
+	directory = *
+	directory = *

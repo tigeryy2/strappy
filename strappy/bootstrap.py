@@ -11,7 +11,7 @@ from strappy import HOME
 from strappy.package import install_packages
 from strappy.util.loggable import Loggable
 
-DRY_RUN: bool = os.environ.get("DRY_RUN", False).lower() == "true"
+DRY_RUN: bool = os.environ.get("DRY_RUN", "False").lower() == "true"
 
 
 def merge_dotfiles(current: Path, new_file: Path) -> Path:
@@ -109,7 +109,7 @@ def main():
 
     # reload the `DRY_RUN` after loading the dotenv file
     global DRY_RUN
-    DRY_RUN = os.environ.get("DRY_RUN", False).lower() == "true"
+    DRY_RUN = os.environ.get("DRY_RUN", "False").lower() == "true"
 
     # install dotfiles
     install_dotfiles()

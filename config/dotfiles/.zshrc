@@ -19,3 +19,7 @@ eval "$(fzf --zsh)"
 if [[ $(defaults read -g ApplePressAndHoldEnabled) != 0 ]]; then
     defaults write -g ApplePressAndHoldEnabled -bool false
 fi
+
+# setting global env variables
+# set vite-devtools 'open-in-editor': https://devtools.vuejs.org/getting-started/open-in-editor
+export LAUNCH_EDITOR=webstorm
