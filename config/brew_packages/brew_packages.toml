@@ -7,7 +7,7 @@ brew = [
     "pipx",
     "tree",
     "lsd",
-    "tldr",  # dev docs and manuals, e.g. `tldr pyenv`
+    "tldr", # dev docs and manuals, e.g. `tldr pyenv`
     "node",
     "autojump",
     "fzf",
@@ -30,4 +30,8 @@ cask = [
     "zoom",
     "postman",
     "rectangle",
+    "zed",
+    "chatgpt",
+    "superwhisper",
+    "onedrive"
 ]
