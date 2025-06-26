@@ -33,5 +33,6 @@ cask = [
     "zed",
     "chatgpt",
     "superwhisper",
-    "onedrive"
+    "onedrive",
+    "notion"
 ]
