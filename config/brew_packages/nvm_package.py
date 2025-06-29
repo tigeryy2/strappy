@@ -23,6 +23,7 @@ class NvmPackage(Package):
 
     name: str = "nvm"
 
+    @property
     def is_installed(self) -> bool:
         """
         Check if nvm is installed
@@ -61,7 +62,7 @@ class NvmPackage(Package):
 
         _ = self.post_install_hook()
 
-        return self.is_installed()
+        return self.is_installed
 
     def post_install_hook(self):
         """
