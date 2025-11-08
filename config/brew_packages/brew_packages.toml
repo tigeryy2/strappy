@@ -11,6 +11,7 @@ brew = [
     "node",
     "autojump",
     "fzf",
+    "opencode",
     "uv",
     "pip-tools",
 ]
@@ -34,5 +35,6 @@ cask = [
     "chatgpt",
     "superwhisper",
     "onedrive",
-    "notion"
+    "notion",
+    "codex",
 ]
