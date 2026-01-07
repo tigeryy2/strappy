@@ -27,7 +27,7 @@ cask = [
     "fleet",
     "slack",
     "github",
-    "logi-options-plus",
+    "bettermouse", # config: config/app_settings/bettermouse_config.plist
     "gimp",
     "zoom",
     "postman",
