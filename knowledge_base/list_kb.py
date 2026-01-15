@@ -45,7 +45,11 @@ def parse_yaml_lines(lines: list[str]) -> dict[str, object]:
         line = raw.rstrip()
         if not line.strip():
             continue
-        if line.startswith("  - ") and current_key and isinstance(meta.get(current_key), list):
+        if (
+            line.startswith("  - ")
+            and current_key
+            and isinstance(meta.get(current_key), list)
+        ):
             meta[current_key].append(line[4:].strip())
             continue
         if ":" in line:
@@ -88,7 +92,9 @@ def normalize_tags(tags: object) -> list[str]:
     return []
 
 
-def load_article(path: Path, required_tags: list[str], require_all: bool) -> Optional[Article]:
+def load_article(
+    path: Path, required_tags: list[str], require_all: bool
+) -> Optional[Article]:
     text = path.read_text(encoding="utf-8")
     meta = parse_frontmatter(text)
     last_read_raw = meta.get("last_read")
@@ -120,7 +126,12 @@ def count_tag_matches(tags: list[str], required_tags: list[str]) -> int:
 
 def sort_key(article: Article) -> tuple:
     last_read_ts = article.last_read.timestamp() if article.last_read else 0.0
-    return (-article.tag_match, -article.usefulness, -last_read_ts, article.name.lower())
+    return (
+        -article.tag_match,
+        -article.usefulness,
+        -last_read_ts,
+        article.name.lower(),
+    )
 
 
 def format_article(article: Article, show_meta: bool, show_match: bool) -> str:

@@ -60,25 +60,21 @@ else
     echo "Warning: Install script untested for non-Zsh shells"
 fi
 
-# Install Git and Python3 using Homebrew
-echo "Installing Git and Python3..."
-brew install git python3
+# Install Git using Homebrew
+echo "Installing Git..."
+brew install git
 
-# Add python to path if using Zsh
-if [[ "$USER_SHELL" == */zsh ]]; then
-    echo "Conditionally adding python3 and python to path via ~/.zshrc"
-    # Add Python3 paths to the system PATH
-    PYTHON3_PATH="$(brew --prefix python3)/bin"
-    # Unversioned aliases usually are inside `/libexex/bin`
-    PYTHON_PATH="$(brew --prefix python3)/libexec/bin"
-
-    add_line_to_file_if_not_exist "export PATH=\"$PYTHON3_PATH:$PYTHON_PATH:\$PATH\"" ~/.zshrc
-
-    # Source the changes to .zshrc
-    source ~/.zshrc
+# Install uv if not already installed
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv..."
+    brew install uv
 else
-    echo "Warning: Untested for non-Zsh shells"
+    echo "uv is already installed."
 fi
+
+# Install Python 3.13 using uv
+echo "Installing Python 3.13 via uv..."
+uv python install 3.13
 
 # Create the parent directory if it doesn't exist
 if [ ! -d "$(dirname "$TARGET_DIR")" ]; then
@@ -94,18 +90,11 @@ else
     echo "Strappy repository already exists at $TARGET_DIR."
 fi
 
-# Install Pipenv if not already installed
-if ! command -v pipenv &> /dev/null; then
-    echo "Installing Pipenv..."
-    brew install pipenv
-else
-    echo "Pipenv is already installed."
-fi
-
-# Initialize Pipenv environment in the strappy repository
+# Initialize uv environment in the strappy repository
 if [ -d "$TARGET_DIR" ]; then
-    echo "Initializing Pipenv environment for Strappy..."
-    pipenv install
+    echo "Syncing uv environment for Strappy..."
+    cd "$TARGET_DIR" || exit 1
+    uv sync --locked --group dev
 fi
 
 # Install Oh My Zsh if not already installed

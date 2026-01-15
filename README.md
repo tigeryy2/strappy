@@ -21,15 +21,16 @@ Once the bootstrap script has completed, you should have the following installed
 
 1. Homebrew
 2. Git
-3. Python3
-4. Pipenv
-5. Oh-My-Zsh
-6. Strappy repository cloned to `~/dev/strappy` with pipenv environment created
+3. uv (manages Python 3.13)
+4. Oh-My-Zsh
+5. Strappy repository cloned to `~/Documents/dev/strappy` with uv environment synced
 
-Next, run if you are happy with the default set of packages, run the following command to install them:
+Next, if you are happy with the default set of packages, run:
 
 ```bash
-python ~/dev/strappy/bootstrap.py
+cd ~/Documents/dev/strappy
+uv sync --locked --group dev
+uv run --locked python -m strappy.bootstrap
 ```
 
 ## Configuration
@@ -46,9 +47,8 @@ for any additional configuration that needs to be done after the package is inst
 
 ## Manual Installation
 
-A `setup.py` has been provided to allow the package to be installed via pip.
+A `pyproject.toml` has been provided to allow the package to be installed via uv.
 
 1. Clone the project using git
-2. Create the pipenv environment
-3. Run `pipenv install -e .`
-    1. This installs the project in editable mode
+2. Run `uv sync --locked --group dev`
+3. For submodules, run `uv pip install -e path-to-submodule`

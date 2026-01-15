@@ -157,3 +157,5 @@ prefix_rule(
         "npx tsc -p .",
     ],
 )
+prefix_rule(pattern=["uv", "lock"], decision="allow")
+prefix_rule(pattern=["uv", "run", "ruff", "check", "."], decision="allow")

@@ -2,12 +2,10 @@
 #
 brew = [
     "wget",
-    "pyenv",
-    "pyenv-virtualenv",
     "pipx",
     "tree",
     "lsd",
-    "tldr", # dev docs and manuals, e.g. `tldr pyenv`
+    "tldr", # dev docs and manuals, e.g. `tldr uv`
     "node",
     "autojump",
     "fzf",

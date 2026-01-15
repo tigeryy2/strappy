@@ -1,6 +1,7 @@
 """
 Provides base class for package installation configs
 """
+
 import os
 import re
 import subprocess

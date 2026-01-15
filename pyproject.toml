@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "strappy"
+version = "0.1.0"
+description = "Bootstrapping setup for macOS development environment."
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{ name = "Tiger Yang", email = "tigeryyang@gmail.com" }]
+dependencies = [
+  "pydantic",
+  "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+  "ruff",
+  "pytest",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["docs", "tests"]

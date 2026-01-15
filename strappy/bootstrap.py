@@ -123,9 +123,7 @@ def install_codex_rules():
             Loggable.log().info("Codex rules already linked, skipping")
             return
 
-        Loggable.log().info(
-            f"Backing up '{destination}' to '{destination.name}.bak'"
-        )
+        Loggable.log().info(f"Backing up '{destination}' to '{destination.name}.bak'")
         backup = codex_rules_dir / f"{destination.name}.bak"
         if backup.exists():
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

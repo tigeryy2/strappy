@@ -3,9 +3,9 @@ Provides logging utilities.
 
 Inherit from `Loggable` to get a `log()` classmethod that returns a logger for the parent class.
 """
+
 import logging
 import sys
-from logging import handlers
 from pathlib import Path
 
 
