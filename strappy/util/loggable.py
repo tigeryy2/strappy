@@ -5,6 +5,7 @@ Inherit from `Loggable` to get a `log()` classmethod that returns a logger for t
 """
 
 import logging
+import logging.handlers
 import sys
 from pathlib import Path
 
