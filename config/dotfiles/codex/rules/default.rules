@@ -1,0 +1,159 @@
+# Allow low-risk dev tooling outside the sandbox.
+# Adjust to your repo norms as needed.
+
+prefix_rule(
+    pattern = ["uv", "run", "pytest"],
+    decision = "allow",
+    match = [
+        "uv run pytest",
+        "uv run pytest -q",
+        "uv run pytest tests/unit",
+    ],
+)
+
+prefix_rule(
+    pattern = ["uv", "run", "ruff", ["check", "format"]],
+    decision = "allow",
+    match = [
+        "uv run ruff check .",
+        "uv run ruff check . --fix",
+        "uv run ruff format .",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npm", "run", [
+        "lint",
+        "test",
+        "test:watch",
+        "test:coverage",
+        "test:ui",
+        "test-storybook",
+        "typecheck",
+        "format",
+    ]],
+    decision = "allow",
+    match = [
+        "npm run lint",
+        "npm run test",
+        "npm run test:coverage",
+        "npm run typecheck",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npx", "vitest"],
+    decision = "allow",
+    match = [
+        "npx vitest",
+        "npx vitest --project unit",
+        "npx vitest --coverage",
+        "npx vitest --run",
+        "npx vitest --watch",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", ["status", "diff", "log", "show", "ls-files"]],
+    decision = "allow",
+    match = [
+        "git status",
+        "git diff",
+        "git diff --cached",
+        "git log --oneline",
+        "git show",
+        "git ls-files",
+    ],
+)
+
+prefix_rule(
+    pattern = ["pwd"],
+    decision = "allow",
+    match = [
+        "pwd",
+    ],
+)
+
+prefix_rule(
+    pattern = ["ls"],
+    decision = "allow",
+    match = [
+        "ls",
+        "ls -la",
+    ],
+)
+
+prefix_rule(
+    pattern = ["rg"],
+    decision = "allow",
+    match = [
+        "rg TODO",
+        "rg --files",
+    ],
+)
+
+prefix_rule(
+    pattern = ["cat"],
+    decision = "allow",
+    match = [
+        "cat README.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["head"],
+    decision = "allow",
+    match = [
+        "head -n 20 README.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["tail"],
+    decision = "allow",
+    match = [
+        "tail -n 20 README.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["wc"],
+    decision = "allow",
+    match = [
+        "wc -l README.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["stat"],
+    decision = "allow",
+    match = [
+        "stat README.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npx", "eslint"],
+    decision = "allow",
+    match = [
+        "npx eslint .",
+        "npx eslint . --fix",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npx", "prettier"],
+    decision = "allow",
+    match = [
+        "npx prettier --check .",
+        "npx prettier --write .",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npx", "tsc"],
+    decision = "allow",
+    match = [
+        "npx tsc -p .",
+    ],
+)
