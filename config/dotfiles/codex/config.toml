@@ -1,0 +1,19 @@
+model = "gpt-5.2-codex"
+model_reasoning_effort = "xhigh"
+
+# ---- Notification hook (runs after every task) ----
+notify = [
+  "terminal-notifier",
+  "-title", "Codex CLI",
+  "-message", "Task complete!",
+  "-sound", "default",          # optional – plays the default macOS sound
+  "-group", "codex-tasks"       # optional – groups all Codex alerts
+]
+
+[features]
+streamable_shell = true
+web_search_request = true
+view_image_tool = true
+ghost_commit = true
+unified_exec = true
+shell_snapshot = true

@@ -137,6 +137,41 @@ def install_codex_rules():
     destination.symlink_to(source)
 
 
+def install_codex_config():
+    Loggable.log().info(f"\n{' Installing Codex Config ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Codex config installation")
+        return
+
+    source = DOTFILES_DIR / "codex" / "config.toml"
+    if not source.exists():
+        Loggable.log().warning(f"Codex config not found at '{source}', skipping")
+        return
+
+    codex_dir = HOME / ".codex"
+    codex_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = codex_dir / "config.toml"
+    if destination.exists() or destination.is_symlink():
+        if destination.is_symlink() and destination.resolve() == source.resolve():
+            Loggable.log().info("Codex config already linked, skipping")
+            return
+
+        Loggable.log().info(f"Backing up '{destination}' to '{destination.name}.bak'")
+        backup = codex_dir / f"{destination.name}.bak"
+        if backup.exists():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            shutil.copy2(backup, LOG_DIR / f"{destination.name}_{timestamp}.bak")
+            os.remove(backup)
+
+        shutil.copy2(destination, backup)
+        os.remove(destination)
+
+    Loggable.log().info(f"Creating symlink for '{destination}'")
+    destination.symlink_to(source)
+
+
 def main():
     # environment and logging setup
     load_dotenv()
@@ -148,6 +183,7 @@ def main():
 
     # install dotfiles
     install_dotfiles()
+    install_codex_config()
     install_codex_rules()
 
     # install packages
