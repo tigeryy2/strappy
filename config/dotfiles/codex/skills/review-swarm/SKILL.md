@@ -25,6 +25,10 @@ Run a read-only swarm review of the current working tree. Cover staged, unstaged
 
 Spawn exactly five subagents. Keep the prompts short and independent. Give each agent the task and raw repo context it needs, but not your conclusions.
 
+Use the same base model as the main agent for every subagent in the swarm. Do not mix model families within one review. Example: if the main agent is running on `gpt-5.4`, spawn all review subagents on `gpt-5.4` as well.
+
+Keep reasoning effort flexible, but favor the active setting from the main agent. Only raise or lower it when a specific review angle clearly benefits, and keep that choice intentional rather than using model variation as a review tactic.
+
 ### Agents 1-2: Standard Review
 
 Ask each agent to review the current uncommitted changes and return prioritized findings only.
