@@ -22,3 +22,7 @@ collaboration_modes = true
 [[skills.config]]
 path = "skills/deslop"
 enabled = true
+
+[[skills.config]]
+path = "skills/review-swarm"
+enabled = true
