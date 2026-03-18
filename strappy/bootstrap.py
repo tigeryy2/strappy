@@ -14,6 +14,27 @@ from strappy.util.loggable import Loggable
 DRY_RUN: bool = os.environ.get("DRY_RUN", "False").lower() == "true"
 
 
+def _remove_path(path: Path) -> None:
+    if path.is_symlink() or path.is_file():
+        os.remove(path)
+        return
+
+    if path.is_dir():
+        shutil.rmtree(path)
+
+
+def _copy_path(source: Path, destination: Path) -> None:
+    if source.is_symlink():
+        destination.symlink_to(source.resolve())
+        return
+
+    if source.is_dir():
+        shutil.copytree(source, destination)
+        return
+
+    shutil.copy2(source, destination)
+
+
 def merge_dotfiles(current: Path, new_file: Path) -> Path:
     """
     Merge two dotfiles together
@@ -172,6 +193,54 @@ def install_codex_config():
     destination.symlink_to(source)
 
 
+def install_codex_skills():
+    Loggable.log().info(f"\n{' Installing Codex Skills ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Codex skills installation")
+        return
+
+    source_dir = DOTFILES_DIR / "codex" / "skills"
+    if not source_dir.exists():
+        Loggable.log().warning(
+            f"Codex skills directory not found at '{source_dir}', skipping"
+        )
+        return
+
+    codex_skills_dir = HOME / ".codex" / "skills"
+    codex_skills_dir.mkdir(parents=True, exist_ok=True)
+
+    for source in sorted(source_dir.iterdir()):
+        if not source.is_dir():
+            Loggable.log().warning(
+                f"'{source.name}' is not a skill directory, skipping"
+            )
+            continue
+
+        destination = codex_skills_dir / source.name
+        if destination.exists() or destination.is_symlink():
+            if destination.is_symlink() and destination.resolve() == source.resolve():
+                Loggable.log().info(
+                    f"Codex skill '{source.name}' already linked, skipping"
+                )
+                continue
+
+            Loggable.log().info(
+                f"Backing up '{destination}' to '{destination.name}.bak'"
+            )
+            backup = codex_skills_dir / f"{destination.name}.bak"
+            if backup.exists() or backup.is_symlink():
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")
+                _remove_path(backup)
+
+            _copy_path(destination, backup)
+            _remove_path(destination)
+
+        Loggable.log().info(f"Creating symlink for '{destination}'")
+        destination.symlink_to(source)
+
+
 def main():
     # environment and logging setup
     load_dotenv()
@@ -184,6 +253,7 @@ def main():
     # install dotfiles
     install_dotfiles()
     install_codex_config()
+    install_codex_skills()
     install_codex_rules()
 
     # install packages

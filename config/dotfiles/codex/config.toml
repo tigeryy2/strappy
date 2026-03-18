@@ -17,3 +17,8 @@ view_image_tool = true
 ghost_commit = true
 unified_exec = true
 shell_snapshot = true
+collaboration_modes = true
+
+[[skills.config]]
+path = "skills/deslop"
+enabled = true

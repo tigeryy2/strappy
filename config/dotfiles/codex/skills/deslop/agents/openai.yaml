@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deslop"
+  short_description: "Trim code to the smallest correct shape"
+  default_prompt: "Use $deslop to simplify this code, keep only necessary behavior, and drive the rewrite with focused tests."
