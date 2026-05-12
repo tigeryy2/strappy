@@ -26,3 +26,6 @@ enabled = true
 [[skills.config]]
 path = "skills/review-swarm"
 enabled = true
+
+[tui]
+vim_mode_default = true
