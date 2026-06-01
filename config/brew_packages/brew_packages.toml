@@ -35,5 +35,5 @@ cask = [
     "superwhisper",
     "onedrive",
     "notion",
-    "codex",
+    "codex-app",
 ]

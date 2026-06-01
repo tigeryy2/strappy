@@ -5,4 +5,5 @@ Short reference docs for recurring workflows and implementation decisions. Each 
 ## Contents
 - list_kb.py: List KB articles by tag match, usefulness, and last_read.
 - how_to_use_the_oracle.md: Oracle CLI usage and troubleshooting notes.
+- codex_app_homebrew_cask.md: Codex desktop app Homebrew cask note.
 - oracle/: Cached Oracle runs and artifacts.
