@@ -54,3 +54,73 @@ def test_install_codex_skills_backs_up_existing_directory(tmp_path, monkeypatch)
     assert (backup / "SKILL.md").read_text() == "# Old\n"
     assert destination.is_symlink()
     assert destination.resolve() == source.resolve()
+
+
+def test_install_codex_agents_links_global_agents_file(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "codex" / "AGENTS.md"
+    _write_file(source, "# Guidelines\n")
+
+    home = tmp_path / "home"
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_codex_agents()
+
+    destination = home / ".codex" / "AGENTS.md"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()
+
+
+def test_install_codex_agents_backs_up_existing_file(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "codex" / "AGENTS.md"
+    _write_file(source, "# Guidelines\n")
+
+    home = tmp_path / "home"
+    existing = home / ".codex" / "AGENTS.md"
+    _write_file(existing, "# Old\n")
+
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_codex_agents()
+
+    backup = home / ".codex" / "AGENTS.md.bak"
+    destination = home / ".codex" / "AGENTS.md"
+
+    assert backup.is_file()
+    assert backup.read_text() == "# Old\n"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()
+
+
+def test_install_codex_memory_helpers_links_search_script(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "codex" / "memories" / "list_memories.py"
+    _write_file(source, "#!/usr/bin/env python3\n")
+
+    home = tmp_path / "home"
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_codex_memory_helpers()
+
+    destination = home / ".codex" / "memories" / "list_memories.py"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()

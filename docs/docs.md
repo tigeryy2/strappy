@@ -16,6 +16,10 @@ See [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
 
 To uninstall, run `uninstall_oh_my_zsh` from the zsh shell.
 
+### Codex
+
+Strappy installs Codex config, global `AGENTS.md`, skills, rules, and memory helper scripts. See [Codex Memories](./codex_memories.md) for the searchable memory knowledge base setup.
+
 ### tldr & tldr.inbrowser.app
 
 Clone [tldr.inbrowser.app](https://github.com/InBrowserApp/tldr.inbrowser.app) to
