@@ -103,8 +103,25 @@ After all five agents finish:
    - note material disagreement or uncertainty
 4. Re-rank by severity and confidence, not by which agent found it.
 5. Drop weak or purely stylistic comments unless they expose a real risk.
+6. Create a candidate findings list. Do not send the final review yet.
+7. If there are no candidate findings, skip the validation round and say there are no findings.
+
+## Validation Round
+
+After consolidation and before the final answer, independently validate every
+candidate finding that may appear in the final review.
+
+1. Spawn one fresh independent subagent per candidate finding.
+2. Give each validation agent only:
+   - where to look
+   - the suspected issue
+   - suspected severity / scope
+   - a request to confirm whether the issue is real, not real, or needs caveats
+3. Do not share other agents' conclusions with validators.
+4. Drop findings that fail validation.
+5. Adjust severity, scope, and wording when validation narrows or expands the issue.
 6. Keep the final answer in code-review form: findings first, then open questions or assumptions, then a short coverage summary.
-7. If there are no findings, say so explicitly and mention residual risk or unreviewed areas.
+7. If no findings survive validation, say so explicitly and mention residual risk or unreviewed areas.
 
 ## Output Contract
 
@@ -119,6 +136,7 @@ In `Findings`, each item should include:
 - severity
 - concise problem statement
 - why it matters
+- when/in what situations would the problem occur
 - file reference
 - whether it had multi-agent agreement
 
@@ -126,9 +144,13 @@ In `Coverage`, include:
 
 - whether the full 5-agent swarm ran
 - which angles ran: standard x2, complexity x1, target-branch x2
+- whether one independent validation agent ran for each final finding
+- any findings dropped or materially changed after validation
 - any fallback or missing pass
 
-If subagents are unavailable, fall back to a single-agent review and state that coverage was reduced.
+If subagents are unavailable for either the initial swarm or the validation
+round, fall back to the best available review and state exactly which coverage
+was reduced.
 
 ## Example Requests
 
