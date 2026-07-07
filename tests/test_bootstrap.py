@@ -124,3 +124,101 @@ def test_install_codex_memory_helpers_links_search_script(tmp_path, monkeypatch)
     destination = home / ".codex" / "memories" / "list_memories.py"
     assert destination.is_symlink()
     assert destination.resolve() == source.resolve()
+
+
+def test_install_claude_settings_links_global_settings_file(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "claude" / "settings.json"
+    _write_file(source, '{"theme": "dark"}\n')
+
+    home = tmp_path / "home"
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_claude_settings()
+
+    destination = home / ".claude" / "settings.json"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()
+
+
+def test_install_claude_settings_backs_up_existing_file(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "claude" / "settings.json"
+    _write_file(source, '{"theme": "dark"}\n')
+
+    home = tmp_path / "home"
+    existing = home / ".claude" / "settings.json"
+    _write_file(existing, '{"theme": "light"}\n')
+
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_claude_settings()
+
+    backup = home / ".claude" / "settings.json.bak"
+    destination = home / ".claude" / "settings.json"
+
+    assert backup.is_file()
+    assert backup.read_text() == '{"theme": "light"}\n'
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()
+
+
+def test_install_claude_skills_links_repo_skill(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "claude" / "skills" / "thermo-nuclear-code-quality-review"
+    _write_file(source / "SKILL.md", "# Thermo\n")
+
+    home = tmp_path / "home"
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_claude_skills()
+
+    destination = home / ".claude" / "skills" / "thermo-nuclear-code-quality-review"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()
+
+
+def test_install_claude_skills_backs_up_existing_directory(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "claude" / "skills" / "make-interfaces-feel-better"
+    _write_file(source / "SKILL.md", "# New UI\n")
+
+    home = tmp_path / "home"
+    existing = home / ".claude" / "skills" / "make-interfaces-feel-better"
+    _write_file(existing / "SKILL.md", "# Old UI\n")
+
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_claude_skills()
+
+    backup = home / ".claude" / "skills" / "make-interfaces-feel-better.bak"
+    destination = home / ".claude" / "skills" / "make-interfaces-feel-better"
+
+    assert backup.is_dir()
+    assert (backup / "SKILL.md").read_text() == "# Old UI\n"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()

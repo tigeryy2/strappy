@@ -237,9 +237,7 @@ def install_codex_memory_helpers():
 
     source = DOTFILES_DIR / "codex" / "memories" / "list_memories.py"
     if not source.exists():
-        Loggable.log().warning(
-            f"Codex memory helper not found at '{source}', skipping"
-        )
+        Loggable.log().warning(f"Codex memory helper not found at '{source}', skipping")
         return
 
     codex_memories_dir = HOME / ".codex" / "memories"
@@ -313,6 +311,89 @@ def install_codex_skills():
         destination.symlink_to(source)
 
 
+def install_claude_settings():
+    Loggable.log().info(f"\n{' Installing Claude Settings ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Claude settings installation")
+        return
+
+    source = DOTFILES_DIR / "claude" / "settings.json"
+    if not source.exists():
+        Loggable.log().warning(f"Claude settings not found at '{source}', skipping")
+        return
+
+    claude_dir = HOME / ".claude"
+    claude_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = claude_dir / "settings.json"
+    if destination.exists() or destination.is_symlink():
+        if destination.is_symlink() and destination.resolve() == source.resolve():
+            Loggable.log().info("Claude settings already linked, skipping")
+            return
+
+        Loggable.log().info(f"Backing up '{destination}' to '{destination.name}.bak'")
+        backup = claude_dir / f"{destination.name}.bak"
+        if backup.exists() or backup.is_symlink():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")
+            _remove_path(backup)
+
+        _copy_path(destination, backup)
+        _remove_path(destination)
+
+    Loggable.log().info(f"Creating symlink for '{destination}'")
+    destination.symlink_to(source)
+
+
+def install_claude_skills():
+    Loggable.log().info(f"\n{' Installing Claude Skills ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Claude skills installation")
+        return
+
+    source_dir = DOTFILES_DIR / "claude" / "skills"
+    if not source_dir.exists():
+        Loggable.log().warning(
+            f"Claude skills directory not found at '{source_dir}', skipping"
+        )
+        return
+
+    claude_skills_dir = HOME / ".claude" / "skills"
+    claude_skills_dir.mkdir(parents=True, exist_ok=True)
+
+    for source in sorted(source_dir.iterdir()):
+        if not source.is_dir():
+            Loggable.log().warning(
+                f"'{source.name}' is not a skill directory, skipping"
+            )
+            continue
+
+        destination = claude_skills_dir / source.name
+        if destination.exists() or destination.is_symlink():
+            if destination.is_symlink() and destination.resolve() == source.resolve():
+                Loggable.log().info(
+                    f"Claude skill '{source.name}' already linked, skipping"
+                )
+                continue
+
+            Loggable.log().info(
+                f"Backing up '{destination}' to '{destination.name}.bak'"
+            )
+            backup = claude_skills_dir / f"{destination.name}.bak"
+            if backup.exists() or backup.is_symlink():
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")
+                _remove_path(backup)
+
+            _copy_path(destination, backup)
+            _remove_path(destination)
+
+        Loggable.log().info(f"Creating symlink for '{destination}'")
+        destination.symlink_to(source)
+
+
 def main():
     # environment and logging setup
     load_dotenv()
@@ -329,6 +410,8 @@ def main():
     install_codex_memory_helpers()
     install_codex_skills()
     install_codex_rules()
+    install_claude_settings()
+    install_claude_skills()
 
     # install packages
     install_packages()

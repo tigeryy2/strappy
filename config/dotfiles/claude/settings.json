@@ -1,0 +1,25 @@
+{
+  "model": "opus[1m]",
+  "enabledPlugins": {
+    "github@claude-plugins-official": true,
+    "linear@claude-plugins-official": true,
+    "notion-workspace-plugin@notion-plugin-marketplace": true,
+    "postgres-best-practices@supabase-agent-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "notion-plugin-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "makenotion/claude-code-notion-plugin"
+      }
+    },
+    "supabase-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "supabase/agent-skills"
+      }
+    }
+  },
+  "effortLevel": "xhigh",
+  "theme": "dark"
+}
