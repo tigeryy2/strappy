@@ -10,6 +10,8 @@ Use this skill for an unusually strict review focused on implementation quality,
 
 Above all, this skill should push the reviewer to be **ambitious** about code structure. Do not merely identify local cleanup opportunities. Actively search for "code judo" moves: restructurings that preserve behavior while making the implementation dramatically simpler, smaller, more direct, and more elegant.
 
+Use the review-swarm skill for orchestration. Apply this skill's standards to its reviewer prompts and consolidation.
+
 ## Core Prompt
 
 Start from this baseline:

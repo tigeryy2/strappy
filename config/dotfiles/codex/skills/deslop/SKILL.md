@@ -15,6 +15,7 @@ Treat accidental complexity as a bug. Optimize for the smallest implementation t
 - Ask: what is the cleanest possible implementation?
 - Ask: what level of complexity is appropriate for this project and the actual usage?
 - Ask: can this be solved by deleting code, inlining code, narrowing scope, or removing a layer?
+- Ask: is this complexity justified by a concrete requirement, observed failure, security boundary, or realistic edge case—or only by speculation?
 
 ## Workflow
 

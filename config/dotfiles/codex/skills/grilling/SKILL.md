@@ -7,7 +7,10 @@ Interview me relentlessly about every aspect of this until we reach a shared und
 
 Ask the questions one at a time, waiting for feedback on each question before continuing. Asking multiple questions at once is bewildering.
 
-For each question, provide context, concisely explain the tradeoffs among the viable options, and give your recommended answer.
+Before asking each question, briefly explain in plain language:
+- The context
+- The viable options and their tradeoffs
+- Your recommendation and why
 
 If a *fact* can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
 
