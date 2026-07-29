@@ -13,6 +13,7 @@ brew = [
     "uv",
     "pip-tools",
     "terminal-notifier",
+    "tmux",
 ]
 
 cask = [
