@@ -10,7 +10,7 @@ Use this skill for an unusually strict review focused on implementation quality,
 
 Above all, this skill should push the reviewer to be **ambitious** about code structure. Do not merely identify local cleanup opportunities. Actively search for "code judo" moves: restructurings that preserve behavior while making the implementation dramatically simpler, smaller, more direct, and more elegant.
 
-Use the review-swarm skill for orchestration. Apply this skill's standards to its reviewer prompts and consolidation.
+Do not use the review-swarm skill, use your own custom subagents.
 
 ## Core Prompt
 
@@ -21,6 +21,7 @@ Start from this baseline:
 > Work to improve abstractions, modularity, reduce Spaghetti code, improve succinctness and legibility.
 > Be ambitious, if there is a clear path to improving the implementation that involves restructuring some of the codebase, go for it.
 > Be extremely thorough and rigorous. Measure twice, cut once.
+> Check that the changes solve a demonstrated problem, not a hypothetical future need
 
 ## Non-Negotiable Additional Standards
 
@@ -44,11 +45,13 @@ Apply the baseline prompt above, plus these explicit review rules:
    - If a change adds "weird if statements in random places", treat that as a design problem, not a stylistic nit.
    - Prefer pushing the logic into a dedicated abstraction, helper, state machine, policy object, or separate module instead of tangling an existing path.
    - Call out changes that make the surrounding code harder to reason about, even if they technically work.
+   - Flag speculative abstractions, configuration, extension points, and fallback behavior
 
 3. **Bias toward cleaning the design, not just accepting working code.**
    - If behavior can stay the same while the structure becomes meaningfully cleaner, push for the cleaner version.
    - Do not rubber-stamp "it works" implementations that leave the codebase messier.
    - Strongly prefer simplifications that remove moving pieces altogether over refactors that merely spread the same complexity around.
+   - Prefer established project pattersn over clever or novel machinery
 
 4. **Prefer direct, boring, maintainable code over hacky or magical code.**
    - Treat brittle, ad-hoc, or "magic" behavior as a code-quality problem.
@@ -69,6 +72,11 @@ Apply the baseline prompt above, plus these explicit review rules:
    - If independent work is serialized for no good reason, ask whether the flow should run in parallel instead.
    - If related updates can leave state half-applied, push for a more atomic structure.
    - Do not over-index on micro-optimizations, but do flag avoidable orchestration complexity that makes the implementation more brittle.
+8. **Be ambitious about erasure**
+   - Identify duplicated concepts, logic, abstractions, or sources of truth that should be unified
+   - Flag dead code, unused files, obsolete branches, stale compatibility paths, and redundant configuration.
+   - Ensure tests for superseded behavior are deleted or rewritten-not retained, skipped, or weakened
+   - Remove stale comments & docs. Rewrite only those still needed to explain intent
 
 ## Primary Review Questions
 

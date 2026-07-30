@@ -45,6 +45,57 @@ Findings should be limited to files in `changedFiles`. A reviewer may cite an
 unchanged file only as supporting evidence for a bug caused by a changed file.
 Drop findings whose primary defect is outside the assigned diff.
 
+## Design & Code Guidelines
+
+### Tests
+
+- Ensure that tests are intentional and provide real value. It is important to avoid tests that don't provide useful coverage or simply lock in unimportant implementation details
+- Tests commited to the codebase should be selected carefully with extreme selectivity & intetionality.
+- Tests should validate and guard core logic and flows.
+
+### UI
+
+- Ensure that UI uses visual hierarchy, reject over use of nested cards or boxes
+- Avoid overuse of eyebrows, overlines, and subtitles
+- Ensure that a consistent spacing scale is used, no arbitrary spacing unless a specific constraint requires it
+- Ensure that even if the UI was in a different language that the user couldn't read, the spacing & context would allow them to infer the primary actions & interactions
+
+### Obvious Solution Checklist
+
+- Check that the change solves a demonstrated problem, not a hypothetical future need.
+- Flag speculative abstractions, configuration, extension points, and fallback behavior.
+- Look for a simpler solution that still provides the required functionality and performance.
+- Prefer established project patterns over clever or novel machinery.
+- Challenge indirection that does not reduce meaningful complexity.
+- Flag bolted-on special cases that suggest the underlying design is wrong.
+- Confirm complexity is justified by an actual constraint, requirement, or measured bottleneck.
+- Ensure simplification does not trade away correctness, functionality, performance, or maintainability.
+- Push back when the implementation overlooks a more direct and obvious approach.
+- Final question: **Is this the simplest complete solution to the problem we actually have?**
+
+### Erasure Review Checklist
+
+- Identify duplicated concepts, logic, abstractions, or sources of truth that should be unified.
+- Flag dead code, unused files, obsolete branches, stale compatibility paths, and redundant configuration.
+- Prefer reuse of existing code over introducing parallel helpers or abstractions.
+- Challenge additions that solve no demonstrated requirement.
+- Flag tangled or surprising code; confusion often indicates a poor abstraction.
+- Check whether the change fixes the root cause or merely shields the symptom with a special case.
+- For every `X → Y` replacement, verify `X` is fully removed unless compatibility was explicitly required.
+- Confirm obsolete syntax, behavior, APIs, flags, and data shapes are removed from:
+  - Implementation
+  - Tests and fixtures
+  - Documentation and examples
+  - Configuration and migrations
+- Ensure tests for superseded behavior were deleted or rewritten—not retained, skipped, or weakened.
+- Remove stale comments; rewrite only those still needed to explain intent.
+- Remove completed TODOs and references to resolved work.
+- Check for documentation describing decommissioned systems, retired workflows, or obsolete rules.
+- Verify links and references to deleted or renamed material were updated.
+- Prefer compression: fewer concepts, branches, files, and rules while preserving required behavior.
+- Treat deletion and simplification as valuable outcomes, not incidental cleanup.
+- Final question: **What did this change make obsolete, and was all of it removed?**
+
 ## Agent Layout
 
 Spawn exactly five subagents and, in parallel, start exactly one read-only Claude Code second-opinion pass. Keep prompts short and independent. Give each reviewer the task and raw repo context it needs, but not your conclusions or another reviewer's output.
