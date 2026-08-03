@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Test Suites"
+  short_description: "Review tests for durable, valuable coverage"
+  default_prompt: "Use $review-test-suites to review the relevant tests and recommend focused cleanup."
