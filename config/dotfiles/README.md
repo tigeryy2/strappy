@@ -6,3 +6,4 @@ Managed dotfiles that the bootstrap process can install or sync.
 - pip.conf - pip configuration defaults
 - codex/ - Codex rules and related configuration
 - claude/ - Claude Code settings and local skills
+- Codex `AGENTS.md` is also linked to `~/.grok/AGENTS.md` for Grok Build

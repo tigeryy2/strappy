@@ -3,7 +3,7 @@
 Codex-specific dotfiles for repo automation defaults.
 
 ## Contents
-- AGENTS.md - global Codex guidance installed to ~/.codex/AGENTS.md by bootstrap
+- AGENTS.md - global guidance installed to ~/.codex/AGENTS.md and ~/.grok/AGENTS.md by bootstrap
 - config.toml - Codex CLI config installed to ~/.codex/config.toml by bootstrap
 - config.toml enables the local `deslop` and `review-swarm` skills from `~/.codex/skills`
 - memories/ - Codex memory helper scripts installed to `~/.codex/memories` by bootstrap

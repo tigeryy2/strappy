@@ -228,6 +228,41 @@ def install_codex_agents():
     destination.symlink_to(source)
 
 
+def install_grok_agents():
+    Loggable.log().info(f"\n{' Installing Grok Agents Guidance ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Grok agents guidance installation")
+        return
+
+    source = DOTFILES_DIR / "codex" / "AGENTS.md"
+    if not source.exists():
+        Loggable.log().warning(f"Grok AGENTS.md not found at '{source}', skipping")
+        return
+
+    grok_dir = HOME / ".grok"
+    grok_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = grok_dir / "AGENTS.md"
+    if destination.exists() or destination.is_symlink():
+        if destination.is_symlink() and destination.resolve() == source.resolve():
+            Loggable.log().info("Grok AGENTS.md already linked, skipping")
+            return
+
+        Loggable.log().info(f"Backing up '{destination}' to '{destination.name}.bak'")
+        backup = grok_dir / f"{destination.name}.bak"
+        if backup.exists() or backup.is_symlink():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")
+            _remove_path(backup)
+
+        _copy_path(destination, backup)
+        _remove_path(destination)
+
+    Loggable.log().info(f"Creating symlink for '{destination}'")
+    destination.symlink_to(source)
+
+
 def install_codex_memory_helpers():
     Loggable.log().info(f"\n{' Installing Codex Memory Helpers ':=^80}")
 
@@ -406,6 +441,7 @@ def main():
     # install dotfiles
     install_dotfiles()
     install_codex_agents()
+    install_grok_agents()
     install_codex_config()
     install_codex_memory_helpers()
     install_codex_skills()

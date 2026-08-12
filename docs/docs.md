@@ -20,6 +20,10 @@ To uninstall, run `uninstall_oh_my_zsh` from the zsh shell.
 
 Strappy installs Codex config, global `AGENTS.md`, skills, rules, and memory helper scripts. See [Codex Memories](./codex_memories.md) for the searchable memory knowledge base setup.
 
+### Grok Build
+
+Strappy links the same global `AGENTS.md` to `~/.grok/AGENTS.md` so Grok Build gets the home-level project rules file.
+
 ### tldr & tldr.inbrowser.app
 
 Clone [tldr.inbrowser.app](https://github.com/InBrowserApp/tldr.inbrowser.app) to
