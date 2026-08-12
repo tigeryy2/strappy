@@ -31,8 +31,7 @@ cask = [
     "postman",
     "rectangle",
     "zed",
-    "chatgpt",
+    "chatgpt", # replaces discontinued Homebrew cask `codex-app`
     "onedrive",
     "notion",
-    "codex-app",
 ]

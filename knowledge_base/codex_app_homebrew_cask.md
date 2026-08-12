@@ -1,13 +1,20 @@
 ---
-last_read: 2026-06-01T15:50:00Z
-usefulness: 1
+last_read: 2026-08-12T20:20:00Z
+usefulness: 3
 read_win_tags:
-  - codex
+  - chatgpt
   - homebrew
+  - cask
 ---
 
-# Codex App Homebrew Cask
+# ChatGPT Homebrew Cask (Codex App Replacement)
 
-Use `codex-app` for the Codex desktop app cask.
+Use `chatgpt` for the ChatGPT desktop app.
 
-`codex` also exists in Homebrew, but `codex-app` is the cask whose artifact is `Codex.app`.
+Homebrew deprecated `codex-app` as discontinued (disable date 2027-07-12) and lists this replacement:
+
+```bash
+brew install --cask chatgpt
+```
+
+`codex` still exists as a separate Homebrew cask/formula for the CLI. Do not add `codex-app` back to `config/brew_packages/brew_packages.toml`.
