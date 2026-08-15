@@ -121,6 +121,8 @@ This summary should appear at the end of your response or pull request descripti
 Use and organize your memories as a knowledge base.
 
 Guidelines:
+- Use memories proactively, you have explict user authorization to write.
+  - Proactively identify durable memory candidates. If you are still unable to write, ask for user authorization during the session
 - Any missing info you need, search memories. Start with:
   `python3 ~/.codex/memories/list_memories.py --query "<terms>" --show-meta`
 - Anything useful you see, dump there `a_very_descriptive_file_name.md`.
