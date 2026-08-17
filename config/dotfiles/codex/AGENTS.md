@@ -125,6 +125,16 @@ Guidelines:
   - Proactively identify durable memory candidates. If you are still unable to write, ask for user authorization during the session
 - Any missing info you need, search memories. Start with:
   `python3 ~/.codex/memories/list_memories.py --query "<terms>" --show-meta`
+- Search with short, discriminating terms; do not paste the whole task or mix
+  every identifier into one query.
+  - First pass: domain/entity plus exact symptom, error text, symbol, command,
+    or workflow name, such as `Cerenome Step 6 inventory_instance_balances`.
+  - Second pass: reusable situation terms without the current PR/run number,
+    such as `exact head moving PR recheck`, `CI pending watcher`, `preview ready
+    completion claims`, or `task handoff context switch`.
+  - `--tags` matches exact `memory_tags`; use `--require-all` only when every
+    listed tag is required. Add `--include-rollouts` only for exact historical
+    commands, errors, or evidence.
 - Anything useful you see, dump there `a_very_descriptive_file_name.md`.
 - Jot down obstacles and how you solved them.
 - Note key design decisions, particular on the intent

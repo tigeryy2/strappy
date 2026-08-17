@@ -29,6 +29,10 @@ Use plain Markdown fields instead of YAML frontmatter for Codex memories. Genera
 
 ## Search
 
+Queries return memories matching any whole search term and rank title, scope,
+path, tag, and keyword matches above body-only matches. `--tags` matches exact
+`memory_tags` values; use `--require-all` to require every requested tag.
+
 ```bash
 python3 ~/.codex/memories/list_memories.py
 python3 ~/.codex/memories/list_memories.py --tags kevork,review --show-meta

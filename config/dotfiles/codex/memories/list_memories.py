@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
-MEMORY_DIR = Path(__file__).resolve().parent
+MEMORY_DIR = Path.home() / ".codex" / "memories"
 EXCLUDE_DIRS = {".git"}
 DEFAULT_EXCLUDE_DIRS = {"rollout_summaries"}
 
@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--tags",
         default="",
-        help="Comma-separated tags to prefer or filter by.",
+        help="Comma-separated memory_tags to filter by (exact, case-insensitive).",
     )
     parser.add_argument(
         "--require-all",
@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--query",
         default="",
-        help="Case-insensitive text query. All terms must appear.",
+        help="Case-insensitive text query. Any term may match; title and metadata matches rank first.",
     )
     parser.add_argument(
         "--include-rollouts",
@@ -95,15 +95,11 @@ def parse_doc(
     keywords = normalize_list(meta.get("keywords"))
     scope = meta.get("scope") or meta.get("applies_to") or ""
     title = extract_title(text) or path.relative_to(root).name
-    tag_match = count_tag_matches(
-        tags=tags,
-        keywords=keywords,
-        scope=scope,
-        title=title,
-        path=path.relative_to(root),
-        wanted_tags=wanted_tags,
+    tag_match = count_tag_matches(tags=tags, wanted_tags=wanted_tags)
+    query_metadata = " ".join(
+        [title, scope, str(path.relative_to(root)), *tags, *keywords]
     )
-    query_match = count_query_matches(text, query_terms)
+    query_match = count_query_matches(text, query_terms, metadata=query_metadata)
 
     if wanted_tags:
         if tag_match == 0:
@@ -111,7 +107,7 @@ def parse_doc(
         if require_all_tags and len({tag.lower() for tag in wanted_tags}) > tag_match:
             return None
 
-    if query_terms and query_match != len(query_terms):
+    if query_terms and query_match == 0:
         return None
 
     rel_path = path.relative_to(root)
@@ -201,28 +197,34 @@ def extract_title(text: str) -> str | None:
 
 def count_tag_matches(
     tags: list[str],
-    keywords: list[str],
-    scope: str,
-    title: str,
-    path: Path,
     wanted_tags: list[str],
 ) -> int:
     if not wanted_tags:
         return 0
-    exact = {tag.lower() for tag in [*tags, *keywords]}
-    searchable = " ".join([scope, title, str(path), *tags, *keywords]).lower()
-    return sum(
-        1
-        for tag in wanted_tags
-        if tag.lower() in exact or tag.lower() in searchable
-    )
+    exact = {tag.casefold() for tag in tags}
+    return sum(1 for tag in wanted_tags if tag.casefold() in exact)
 
 
-def count_query_matches(text: str, query_terms: list[str]) -> int:
+def count_query_matches(
+    text: str,
+    query_terms: list[str],
+    metadata: str = "",
+) -> int:
     if not query_terms:
         return 0
-    lower = text.lower()
-    return sum(1 for term in query_terms if term.lower() in lower)
+    unique_terms = list(dict.fromkeys(term.casefold() for term in query_terms))
+    body_matches = sum(1 for term in unique_terms if query_term_matches(text, term))
+    metadata_matches = sum(
+        1 for term in unique_terms if query_term_matches(metadata, term)
+    )
+    return body_matches + (metadata_matches * 4)
+
+
+def query_term_matches(text: str, term: str) -> bool:
+    escaped = re.escape(term)
+    prefix = r"(?<!\w)" if term[:1].isalnum() else ""
+    suffix = r"(?!\w)" if term[-1:].isalnum() else ""
+    return re.search(f"{prefix}{escaped}{suffix}", text, re.IGNORECASE) is not None
 
 
 def sort_key(doc: MemoryDoc) -> tuple[object, ...]:
