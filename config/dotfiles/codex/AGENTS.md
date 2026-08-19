@@ -12,7 +12,6 @@ keeping it in that large file is ok.
 - Delete unused or obsolete files when your changes make them irrelevant (refactors, feature removals, etc.), and revert files only when the change is yours or explicitly requested. If a git operation leaves you unsure about other agents' in-flight work, stop and coordinate instead of deleting.
 - Before attempting to delete a file to resolve a local type/lint failure, stop and ask the user. Other agents are often editing adjacent files; deleting their work to silence an error is never acceptable without explicit approval.
 - Coordinate with other agents before removing their in-progress edits—don't revert or delete work you didn't author unless everyone agrees.
-- Moving/renaming and restoring files is allowed.
 - ABSOLUTELY NEVER run destructive git operations (e.g., git reset --hard, rm, git checkout/git restore to an older commit) unless the user gives an explicit, written instruction in this conversation. Treat these commands as catastrophic; if you are even slightly unsure, stop and ask before touching them. (When working within Cursor or Codex Web, these git limitations do not apply; use the tooling's capabilities as needed.)
 - Never use git restore (or similar commands) to revert files you didn't author—coordinate with other agents instead so their in-progress work stays intact.
 - Keep commits atomic: commit only the files you touched and list each path explicitly. For tracked files run git commit -m "<scoped message>" -- path/to/file1 path/to/file2. For brand-new files, use the one-liner git restore --staged :/ && git add "path/to/file1" "path/to/file2" && git commit -m "<scoped message>" -- path/to/file1 path/to/file2.
@@ -77,6 +76,18 @@ For comments and tests, be aggressive: keep only what is truly essential. A refa
 Prose rots the same way: every AGENTS.md, MEMORY.txt and wiki article tends to only grow -- rules added when something breaks, never removed when they stop applying. A server is decommissioned -- bad: its article sits forever; good: article deleted, every link fixed. MEMORY.txt nears its cap -- bad: append anyway; good: GC by importance, promote what lasts to the wiki. A TODO.md item closes -- bad: the line lingers; good: deleted on sight. Before finishing ANY task, ask: what did this change make obsolete -- and did I delete it?
 
 # Tools
+
+## Wait efficiently for external state
+
+  - Resolve the exact target and terminal predicates first: immutable SHA, run ID, job ID, deployment revision, URL, artifact, success condition, and failure condition.
+  - Choose a polling interval proportional to the expected completion time and how often useful state can change. Do not poll every few seconds for work expected to take many minutes. As a starting heuristic: seconds-long work every 2-5 seconds, several-minute work
+  every 15-30 seconds, and 10-30 minute work every 30-120 seconds. Adjust when the external system has a known refresh cadence or rate limit.
+  - For routine polls: Prefer one short blocking command, native watcher, or small script that polls internally with an explicit interval, timeout, and terminal success/failure conditions. It should emit only state transitions, terminal results, actionable errors.
+  - Keep one observer per immutable target. Do not alternate aggregate and detail polling against unchanged state, run duplicate watchers, or restart observation merely because the target is slow.
+  - Terminal failure ends observation. Capture the target, timestamp, failed phase, and concise error; diagnose before retrying. Restart only for a new target or an explicitly justified retry.
+  - If a clean watcher or script is not easy, or more dynamic monitoring is needed, delegate the observation to a Luna Max subagent. Give it the immutable target, check command/tool, polling cadence, timeout, exact success/failure predicates, anything to watch out for, and the overall goal. It should use tool calls separated by efficient waits and return only meaningful transitions and the terminal result while the primary agent continues useful work.
+  - Do not keep a turn or tool call blocked solely to simulate frequent polling. Use bounded waits, and leave enough time to communicate progress when observation is long-running.
+  - If the user asks only for current status, take one fresh snapshot and return; do not begin a watcher.
 
 ## Python
 
