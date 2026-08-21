@@ -7,7 +7,7 @@ description: Review open code changes with an independent multi-agent swarm and 
 
 ## Overview
 
-Run a read-only swarm review of the current working tree. Cover staged, unstaged, and untracked files; use independent subagents with different review angles plus one parallel Claude Code second-opinion pass; then consolidate overlap, disagreement, and severity into one report.
+Run a read-only swarm review of the current working tree. Cover staged, unstaged, and untracked files; use independent subagents with different review angles plus one parallel Sol xhigh second-opinion subagent; then consolidate overlap, disagreement, and severity into one report.
 
 ## Preflight
 
@@ -20,6 +20,7 @@ Run a read-only swarm review of the current working tree. Cover staged, unstaged
 3. If there are no open changes, stop and say there is nothing to review.
 4. Keep the entire swarm read-only. Do not edit files, stage changes, or run destructive git commands.
 5. Use fresh subagent threads. Do not share one agent's conclusions with another before consolidation.
+6. The primary agent reads applicable AGENTS instructions, skills, memories, and historical context. Give reviewers a compact, self-contained scope brief; do not ask them to reread those sources unless the assigned review specifically depends on them.
 
 ## Scope Contract
 
@@ -31,7 +32,7 @@ Before spawning reviewers, define the exact review root and diff scope:
 - `diffExpr`: the exact comparison, such as `<baseRef>...<headRef>`
 - `changedFiles`: output of `git -C <reviewRoot> diff --name-only <diffExpr>` plus any staged/unstaged/untracked files in scope
 
-Pass these values to every subagent and Claude. Instruct reviewers to verify
+Pass these values to every subagent. Instruct reviewers to verify
 `git -C <reviewRoot> rev-parse --show-toplevel`, `git -C <reviewRoot> rev-parse <baseRef>`,
 `git -C <reviewRoot> rev-parse <headRef>`, and the changed-file list before
 reviewing. If the check does not match the assigned scope, the reviewer should
@@ -98,9 +99,11 @@ Drop findings whose primary defect is outside the assigned diff.
 
 ## Agent Layout
 
-Spawn exactly five subagents and, in parallel, start exactly one read-only Claude Code second-opinion pass. Keep prompts short and independent. Give each reviewer the task and raw repo context it needs, but not your conclusions or another reviewer's output.
+Spawn exactly five primary review subagents and, in parallel, one read-only Sol xhigh second-opinion subagent. Keep prompts short and independent. Give each reviewer the task and raw repo context it needs, but not your conclusions or another reviewer's output.
 
-Use the same base model as the main agent for every subagent in the swarm. Do not mix model families within one review. Example: if the main agent is running on `gpt-5.4`, spawn all review subagents on `gpt-5.4` as well.
+Every spawn must set `fork_turns: "none"`; the scope contract in the prompt replaces conversation inheritance. Never rely on the full-history default.
+
+Use the same base model as the main agent for the five primary reviewers. The designated Sol xhigh second-opinion reviewer is the intentional model exception; do not introduce other model variation.
 
 Keep reasoning effort flexible, but favor the active setting from the main agent. Only raise or lower it when a specific review angle clearly benefits, and keep that choice intentional rather than using model variation as a review tactic.
 
@@ -153,42 +156,20 @@ Example prompt:
 
 `Review only this scope: reviewRoot=<absolute path>, diffExpr=<baseRef>...HEAD, changedFiles=<list>. First verify the root, base/head SHAs, and changed-file list. State the target branch assumption. Map the flows touched by changedFiles, inspect target behavior with git -C <reviewRoot> show <baseRef>:path as needed, then review the changes in that context. Return prioritized findings with file/line refs. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug.`
 
-### Parallel Claude Second Opinion
+### Parallel Sol xhigh Second Opinion
 
-Run the Claude pass at the same time as the five subagents, not after the
-initial swarm finishes.
+Run the second-opinion subagent at the same time as the five primary reviewers, not after the initial swarm finishes.
 
-Use the latest Opus model and follow the repo's `AGENTS.md` Claude Review
-instructions:
-
-- run `claude -p` outside the sandbox by requesting escalated command
-  permissions; ask the user to allow the read-only Claude review command before
-  launching it
-- put the prompt immediately after `claude -p`, before tool options
-- use `--model opus`
-- use `--permission-mode dontAsk`
-- keep tools read-only and tightly scoped
-- ask Claude to verify the exact review root, base/head SHAs, and changed-file
-  list before reviewing
-- ask Claude to inspect only the assigned diff, untracked files in scope, and
-  directly relevant tests or subsystems at risk
-- require all Claude `git` commands to use `git -C <reviewRoot>` when reviewing
-  an isolated clone/worktree
-- tell Claude to stop with `scope mismatch` if its root/ref/diff check does not
-  match the assigned scope
-- tell Claude not to report primary findings outside `changedFiles`; unchanged
-  files may only support a bug caused by a changed file
-- do not share any subagent findings, candidate findings, or conclusions;
-  preserve independence
-- private code and data access for Claude is explicitly approved (as we are using api key w/ zdr)
+- Spawn with `model: "gpt-5.6-sol"`, `reasoning_effort: "xhigh"`, and `fork_turns: "none"`.
+- Keep it read-only and tightly scoped to the same immutable review contract.
+- Require exact root, base/head SHA, diff, and changed-file verification before review; stop with `scope mismatch` on any mismatch.
+- Ask it to inspect only the assigned diff, untracked files in scope, and directly relevant tests or subsystems at risk.
+- Do not share primary-reviewer findings, candidates, or conclusions; preserve independence.
+- Return prioritized findings only, with file/line references where possible.
 
 Default prompt:
 
-`Review only this assigned scope: reviewRoot=<absolute path>, baseRef=<baseRef>, headRef=HEAD, diffExpr=<baseRef>...HEAD, changedFiles=<list>. First run and report git -C <reviewRoot> rev-parse --show-toplevel, git -C <reviewRoot> rev-parse <baseRef>, git -C <reviewRoot> rev-parse HEAD, and git -C <reviewRoot> diff --name-only <diffExpr>. If those do not match this prompt, stop with scope mismatch. Read AGENTS.md first. This is a read-only second opinion for a code review. Focus on bugs, regressions, permissions/security, migrations, missing tests, and perf-shape issues in changedFiles. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug. Return prioritized findings only with file/line refs where possible.`
-
-Default command:
-
-`claude -p "Review only this assigned scope: reviewRoot=<absolute path>, baseRef=<baseRef>, headRef=HEAD, diffExpr=<baseRef>...HEAD, changedFiles=<list>. First run and report git -C <reviewRoot> rev-parse --show-toplevel, git -C <reviewRoot> rev-parse <baseRef>, git -C <reviewRoot> rev-parse HEAD, and git -C <reviewRoot> diff --name-only <diffExpr>. If those do not match this prompt, stop with scope mismatch. Read AGENTS.md first. This is a read-only second opinion for a code review. Focus on bugs, regressions, permissions/security, migrations, missing tests, and perf-shape issues in changedFiles. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug. Return prioritized findings only with file/line refs where possible." --model opus --permission-mode dontAsk --allowedTools "Read,Grep,Glob,Bash(git -C <reviewRoot> *),Bash(rg *),Bash(sed *),Bash(nl *)"`
+`Review only this assigned scope: reviewRoot=<absolute path>, baseRef=<baseRef>, headRef=<headRef>, diffExpr=<diffExpr>, changedFiles=<list>. First verify the review root, base/head SHAs, and changed-file list; stop with scope mismatch if they differ. Read-only. Focus on bugs, regressions, permissions/security, migrations, missing tests, and performance-shape issues in changedFiles. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug. Return prioritized findings only with file/line refs where possible.`
 
 ## Target Branch Heuristics
 
@@ -206,7 +187,7 @@ When agents need target-branch file contents, prefer direct inspection such as `
 
 ## Consolidation
 
-After all five subagents and the parallel Claude pass finish:
+After all five primary reviewers and the parallel Sol xhigh second opinion finish:
 
 1. Combine all findings into one list.
 2. Merge duplicates.
@@ -219,22 +200,21 @@ After all five subagents and the parallel Claude pass finish:
    Also drop out-of-scope findings whose primary defect is outside the assigned
    `changedFiles`, even if a reviewer found a real issue elsewhere.
 6. Create a candidate findings list. Do not send the final review yet.
-7. Track which findings came from Claude alone versus from the five-agent swarm.
+7. Track which findings came from the Sol xhigh second opinion alone versus from the five primary reviewers.
 8. If there are no candidate findings, skip the validation round and say there
    are no findings.
 
 ## Validation Round
 
-After consolidation and before the final answer, independently validate every
-candidate finding that may appear in the final review.
+After consolidation and before the final answer, independently validate every candidate finding that may appear in the final review.
 
-1. Spawn one fresh independent subagent per candidate finding.
-2. Give each validation agent only:
+1. Spawn one fresh independent validation subagent for the complete ordinary candidate list, with `fork_turns: "none"` and a compact brief containing for each candidate:
    - where to look
    - the suspected issue
    - suspected severity / scope
    - a request to confirm whether the issue is real, not real, or needs caveats
-3. Do not share other agents' conclusions with validators.
+2. Spawn a dedicated independent validator for an individual P0/P1 only when it involves security, authorization, destructive data changes, or similarly high-consequence behavior.
+3. Do not share reviewer identities, vote counts, or conclusions with validators; provide only the candidate evidence that needs checking.
 4. Drop findings that fail validation.
 5. Adjust severity, scope, and wording when validation narrows or expands the issue.
 6. Keep the final answer in code-review form: findings first, then open questions or assumptions, then a short coverage summary.
@@ -260,10 +240,9 @@ In `Findings`, each item should include:
 In `Coverage`, include:
 
 - whether the full 5-agent swarm ran
-- whether the single Claude second-opinion pass ran in parallel with the swarm
-  and whether it ran with approved outside-sandbox permissions
+- whether the Sol xhigh second-opinion subagent ran in parallel with the swarm
 - which angles ran: standard x2, complexity x1, target-branch x2
-- whether one independent validation agent ran for each final finding
+- whether ordinary findings were batch-validated and which high-consequence findings received dedicated validation
 - any findings dropped or materially changed after validation
 - any fallback or missing pass
 

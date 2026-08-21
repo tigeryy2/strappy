@@ -4,7 +4,7 @@ Tiger owns this computer. Session Start: say hi + 1 motivating line.
 Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
 
 - Use your own judgement. The user may be wrong, be missing context, have unknown unknowns. Push back, guide, provide context & other options.
-- Session Start: Review memories, docs, and past sessions to understand context and intent; Understand existing intent and user asks before coding.
+- Session Start: The primary agent reviews only task-relevant memories, docs, and past sessions needed to understand context and intent. Delegated agents receive a compact brief and do not repeat this discovery unless their assigned task specifically requires historical context.
 - Ideally keep files <~500 LOC; split/refactor as needed. If we're editing a large existing file and this is the repo convention,
 keeping it in that large file is ok.
 - New deps: quick health check (recent releases/commits, adoption). Be very careful with any dep version <3 days old.
@@ -24,10 +24,8 @@ keeping it in that large file is ok.
   - Consider review output vs the intent of the implementation and original plan.
   - When reviewing a PR (remote PR), create a local worktree, pulling in that pr code. Make sure to identify and fetch the correct PR target
   - Use $review-swarm skill to review changes and PR
-  - Once review swarm returns with the results, fire off independent subagents for each issue to validate. Pass these subagents:
-    - Where to look
-    - What the possible issue is, and the identified severity / scope
-    - Ask the subagent to validate the scope, issue, and intent to confirm the issue is real or not
+  - Let `$review-swarm` own its validation round; do not add a second validation round from AGENTS.md.
+  - Validate ordinary candidate findings together in one independent batch. Use a dedicated validator only for an individual P0/P1 involving security, authorization, destructive data changes, or similarly high-consequence behavior.
   - For the final list of valid issues, explain when the issue would occur or cause issues
   - When asked to add comments to the PR, include code/file references or snippets, the explaination.
 - worktrees
@@ -91,6 +89,13 @@ Prose rots the same way: every AGENTS.md, MEMORY.txt and wiki article tends to o
   - Do not keep a turn or tool call blocked solely to simulate frequent polling. Use bounded waits, and leave enough time to communicate progress when observation is long-running.
   - If the user asks only for current status, take one fresh snapshot and return; do not begin a watcher.
 
+## Keep diagnostic output bounded
+
+  - Default command output budgets to 8,000-12,000 tokens. Raise them only for a specific artifact that cannot be projected or sliced.
+  - Prefer structured output and narrow projections (`--json`, `jq`, exact fields, `rg`, and bounded `sed` ranges) over raw logs, full objects, or broad file dumps.
+  - After truncation, refine the query or projection. Never rerun the same raw dump with a larger limit.
+  - Separate independent setup reads from failure-prone network or authentication commands so one failure does not force repeated instruction, memory, or repository reads.
+
 ## Python
 
 * Use `uv` instead of `pip`. Prefix commands with `uv run`.
@@ -109,6 +114,8 @@ Prose rots the same way: every AGENTS.md, MEMORY.txt and wiki article tends to o
 * Use Sol Max
 * Review and consider the feedback
 * It is expected that review may take quite some time to respond. Generally you should allow it to finish unless it is actually stuck/hung.
+* Every spawn must set `fork_turns` explicitly. Use `"none"` for a self-contained brief or the smallest bounded recent-turn window that carries essential conversational context; never rely on the full-history default.
+* The primary agent loads applicable skills, AGENTS instructions, memories, and past-session context. Pass each subagent the exact target, paths, constraints, and expected output it needs. Do not ask subagents to reload those sources unless their task specifically depends on them.
 ---
 
 # Task Updates
