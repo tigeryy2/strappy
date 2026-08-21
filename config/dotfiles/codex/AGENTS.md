@@ -34,6 +34,8 @@ keeping it in that large file is ok.
   - Do not place large implementation focused worktrees in /private/tmp... only truely temporary or transient code should be placed in tmp
 - When commiting, if you can't sign the commit, try asking for sandbox approval first instead of allowing an unsigned commit
 - Github requests, tests, etc may require exiting the sandbox, request approvals whenver blocked
+- When asked to "eval" and check if review comments, findings, etc are real no need to use independent subagents for each.
+  - Instead, use a single subagent for all of them
 
 ## Testing & Verification
 - When coding, prefer end-to-end verify and TDD. Tests/verification are to be split between
@@ -97,26 +99,16 @@ Prose rots the same way: every AGENTS.md, MEMORY.txt and wiki article tends to o
 * Format code before committing
 * For one off scripts / code execution / etc can just use uv
 
-## Claude Review
+## Subagent Review
 
-* Strategically use Claude to get a second opinion for:
+* Strategically use subagents to get a second opinion for:
   * Complex planning
   * High risk implementation
   * Review against plans for complex/high risk
 * Note that these are long running... so do so strategically (e.g. at only the most important moments)
-* Use claude fast mode
-* Use the latest Opus model with `claude -p`, provide context to the current goal/intent, the plan, and where to look
-* You will need to ask to exit the sandbox for the claude usage (otherwise will show not logged in)
+* Use Sol Max
 * Review and consider the feedback
-* When asked to "review with claude", use this `claude -p`
-* Private code access for claude is explicitly allowed and approved
-* Prefer read-only review prompts. Ask Claude to inspect the current worktree, branch diff, untracked files, relevant tests, and the specific files or subsystems at risk.
-* Put the prompt immediately after `claude -p` before variadic tool options; otherwise options such as `--allowedTools` / `--disallowedTools` may consume the prompt.
-* Example read-only review:
-  `claude -p "Review this implementation against origin/main. Read AGENTS.md first. Focus on bugs, regressions, permissions/security, migrations, tests, and perf-shape issues. Return prioritized findings with file/line refs." --model opus --permission-mode dontAsk --tools "Read,Grep,Glob"`
-* If Claude needs shell context, keep it read-only and prefer tightly scoped tool access, for example:
-  `claude -p "Review the current branch diff against origin/main. Return findings only." --model opus --permission-mode dontAsk --allowedTools "Read,Grep,Glob,Bash(git diff *),Bash(git status *),Bash(git ls-files *),Bash(rg *),Bash(sed *),Bash(nl *)"`
-* It is expected that claude may take quite some time to respond. Generally you should allow it to finish unless it is actually stuck/hung.
+* It is expected that review may take quite some time to respond. Generally you should allow it to finish unless it is actually stuck/hung.
 ---
 
 # Task Updates
