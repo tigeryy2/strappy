@@ -1,4 +1,4 @@
 interface:
   display_name: "Review Swarm"
-  short_description: "Review open changes with agent swarm"
-  default_prompt: "Use $review-swarm to review the current uncommitted code changes with independent subagents and consolidate prioritized findings."
+  short_description: "Review changes with history-aware agent modes"
+  default_prompt: "Use $review-swarm to review the current code changes, reuse an exact-head review receipt when available, preserve blind discovery, and consolidate validated findings."

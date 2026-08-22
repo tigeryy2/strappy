@@ -1,257 +1,283 @@
 ---
 name: review-swarm
-description: Review open code changes with an independent multi-agent swarm and a consolidation pass. Use when Codex needs to review staged, unstaged, and untracked changes before commit or PR; when the user wants prioritized findings from multiple review angles; or when changes should be checked against the likely merge target and the current implementation on that target branch.
+description: Review open code changes with an independent multi-agent swarm, history-aware repeat-review modes, and independent validation. Use for first-pass exhaustive reviews, moved-head rechecks, same-head variance reviews, or supplied-finding evaluation before commit or merge.
 ---
 
 # Review Swarm
 
 ## Overview
 
-Run a read-only swarm review of the current working tree. Cover staged, unstaged, and untracked files; use independent subagents with different review angles plus one parallel Sol xhigh second-opinion subagent; then consolidate overlap, disagreement, and severity into one report.
+Run a read-only, evidence-backed review of the exact assigned change set. Preserve
+independent discovery for the first exhaustive review. On later reviews, let the
+primary agent reuse compact prior review receipts while keeping blind discovery
+reviewers free from prior conclusions.
 
-## Preflight
+Choose one mode before spawning agents:
 
-1. Confirm there are open changes with `git status --short`.
-2. Capture the review scope with:
-   - `git branch --show-current`
-   - `git diff --stat --staged`
-   - `git diff --stat`
-   - `git ls-files --others --exclude-standard`
-3. If there are no open changes, stop and say there is nothing to review.
-4. Keep the entire swarm read-only. Do not edit files, stage changes, or run destructive git commands.
-5. Use fresh subagent threads. Do not share one agent's conclusions with another before consolidation.
-6. The primary agent reads applicable AGENTS instructions, skills, memories, and historical context. Give reviewers a compact, self-contained scope brief; do not ask them to reread those sources unless the assigned review specifically depends on them.
+- **Full review:** first review of the exact head, an explicitly requested fresh
+  exhaustive re-review, or a moved head whose delta materially changes the
+  reviewed surface.
+- **Moved-head delta:** a prior full review exists and the new delta is bounded
+  enough to revalidate prior findings plus inspect the repair safely.
+- **Same-head variance:** the exact head already received a complete full review.
+  Re-attest scope and run only limited blind variance coverage unless the user
+  explicitly requests another exhaustive review.
+- **Supplied-finding evaluation:** the user provides concrete findings and asks
+  whether they are real. Use one batch validator rather than a discovery swarm.
 
-## Scope Contract
+Read [references/review-history.md](references/review-history.md) before a
+same-head, moved-head, or supplied-finding review. A first review with no relevant
+receipt does not need that reference.
 
-Before spawning reviewers, define the exact review root and diff scope:
+## Coordinator preflight
 
-- `reviewRoot`: absolute path of the checkout/worktree being reviewed
-- `baseRef`: the merge target ref, such as `origin/main`, `github/main`, or `develop`
-- `headRef`: the reviewed ref, usually `HEAD`
-- `diffExpr`: the exact comparison, such as `<baseRef>...<headRef>`
-- `changedFiles`: output of `git -C <reviewRoot> diff --name-only <diffExpr>` plus any staged/unstaged/untracked files in scope
+The primary agent owns setup, history lookup, mode selection, and consolidation.
+Do not make every reviewer repeat this work.
 
-Pass these values to every subagent. Instruct reviewers to verify
-`git -C <reviewRoot> rev-parse --show-toplevel`, `git -C <reviewRoot> rev-parse <baseRef>`,
-`git -C <reviewRoot> rev-parse <headRef>`, and the changed-file list before
-reviewing. If the check does not match the assigned scope, the reviewer should
-stop and report `scope mismatch`.
+1. Resolve the exact review root, base ref, head ref, immutable base/head SHAs,
+   diff expression, and changed files.
+2. For working-tree review, include staged, unstaged, and untracked files. Stop
+   if there are no open changes.
+3. For a PR, use an isolated worktree and verify the actual target branch.
+4. Search only for compact prior review receipts matching this repository and
+   head, or a directly preceding head. Do not broadly load raw prior transcripts.
+5. Select the review mode using the rules above. State the mode and why before
+   spawning reviewers.
+6. Keep the review read-only. Do not edit files, stage changes, or run destructive
+   git commands.
+7. The primary reads applicable AGENTS instructions, skills, memories, and
+   historical context. Reviewers receive compact briefs and do not repeat that
+   discovery unless their assigned lens explicitly requires it.
 
-For PR reviews from an isolated clone/worktree, all shell commands in reviewer
-prompts must use `git -C <reviewRoot>` or run with `workdir` set to
-`reviewRoot`. Do not rely on ambient cwd.
+## Scope contract
 
-Findings should be limited to files in `changedFiles`. A reviewer may cite an
-unchanged file only as supporting evidence for a bug caused by a changed file.
-Drop findings whose primary defect is outside the assigned diff.
+Define and pass:
 
-## Design & Code Guidelines
+- `reviewRoot`: absolute checkout/worktree path
+- `baseRef` and immutable `baseSha`
+- `headRef` and immutable `headSha`
+- `diffExpr`: exact comparison
+- `changedFiles`: exact in-scope file list
+
+Each reviewer performs one bounded scope attestation:
+
+- verify the repository root and base/head SHAs;
+- verify the changed-file list or its supplied fingerprint;
+- stop with `scope mismatch` if the contract differs.
+
+Do not ask every reviewer to refetch PR metadata, search memories, reconstruct the
+target branch, install dependencies, or rediscover the review history. The
+coordinator supplies those facts. For isolated reviews, use `git -C <reviewRoot>`
+or set `workdir=<reviewRoot>`; never rely on ambient cwd.
+
+Findings must have their primary defect in `changedFiles`. Unchanged files may be
+cited only as supporting evidence for a changed-file bug.
+
+## Independence and history
+
+History is coordinator context, not shared discovery context.
+
+- Blind discovery reviewers receive the immutable scope, role, and raw repository
+  evidence needed for that role—but no prior findings, reviewer votes, or earlier
+  conclusions.
+- A designated continuity reviewer may receive the compact prior receipt. It
+  checks moved-head repairs, surviving findings, regressions, and coverage gaps.
+- Validators receive candidate evidence for and against a finding, but not
+  reviewer identity, vote count, or the coordinator's desired conclusion.
+- Never ask delegated reviewers to load complete prior sessions. If the compact
+  receipt is insufficient, the coordinator extracts only the missing fact.
+
+This separation preserves reviewer variance while preventing every child agent
+from paying for and anchoring on the same historical context.
+
+## Mode-specific agent layout
+
+Every spawn must set `fork_turns: "none"`. Use the same base model as the primary
+unless a role below explicitly requires Sol xhigh.
+
+### Full review
+
+Preserve the exhaustive first-review layout:
+
+1. Two independent standard reviewers.
+2. One complexity-fit reviewer.
+3. Two target-branch deep reviewers.
+4. One parallel `gpt-5.6-sol` xhigh second opinion.
+
+All six remain blind to prior conclusions. Keep prompts short and independent.
+If a relevant earlier receipt exists for an ancestor head, add one continuity
+reviewer only when the moved history materially affects correctness; do not make
+the six blind reviewers history-aware.
+
+### Moved-head delta
+
+Use the smallest review that preserves the original coverage contract:
+
+1. One continuity reviewer receives the prior receipt and exact old-head-to-new-
+   head delta. It classifies prior findings as fixed, surviving, regressed, or
+   uncertain and checks whether fixes introduced new defects.
+2. One blind delta reviewer independently inspects the same delta without prior
+   findings.
+3. Add a specialized blind reviewer only when the delta touches security,
+   authorization, migrations, destructive data behavior, or another distinct
+   high-risk boundary.
+
+Escalate to a full review when the delta changes ownership, architecture,
+permissions, schema shape, deployment topology, or enough files/flows that the
+old coverage no longer represents the current change.
+
+### Same-head variance
+
+Do not repeat the complete swarm automatically.
+
+1. Re-attest the immutable head, base, changed files, CI, and current comments.
+2. Reuse the earlier receipt and completed validation results.
+3. Run one blind variance reviewer by default; use two for security,
+   authorization, migrations, destructive data behavior, or when the previous
+   receipt records a meaningful coverage gap.
+4. Assign a lens not already duplicated at the same model/effort. Do not rerun an
+   identical Sol second-opinion lane merely because a new task was opened.
+5. Run another full swarm only when the user explicitly requests a fresh
+   exhaustive re-review or the prior receipt is incomplete/untrustworthy.
+
+Negative prior results remain evidence, not proof. Limited blind variance exists
+specifically to catch reviewer stochasticity and previously missed findings.
+
+### Supplied-finding evaluation
+
+This is validation, not discovery.
+
+1. Give one fresh independent validator the complete ordinary finding batch.
+2. Ask for `real`, `not real`, or `caveated` verdicts with execution path,
+   conditions, consequence, severity, and smallest remedy.
+3. Use a dedicated additional validator only for an individual P0/P1 involving
+   security, authorization, destructive data changes, or similarly high-
+   consequence behavior.
+4. Do not launch the full six-agent discovery swarm unless the user separately
+   requests a full review.
+
+## Full-review lenses
+
+### Standard reviewers
+
+Focus on bugs, regressions, risky edge cases, missing tests, incorrect
+assumptions, and whether the direction itself is sound. Include staged,
+unstaged, and untracked files where applicable. Return prioritized findings only,
+with file/line references when possible.
+
+### Complexity-fit reviewer
+
+Judge whether the implementation is overbuilt, underbuilt, or right-sized.
+Identify speculative abstractions, missing simplifications, bolted-on special
+cases, duplicated concepts, and missing structure only when concrete. Return only
+actionable findings.
+
+### Target-branch deep reviewers
+
+Map touched flows, data paths, functions, callers, and target-branch behavior.
+Look for missed updates, integration gaps, hidden side effects, and behavior
+drift. State the target-branch assumption and inspect the nearest existing entry
+points for new files.
+
+### Sol xhigh second opinion
+
+Spawn in parallel with `model: "gpt-5.6-sol"`,
+`reasoning_effort: "xhigh"`, and `fork_turns: "none"`. Keep it blind,
+read-only, and scoped to the same immutable contract. Ask for prioritized bugs,
+regressions, permission/security problems, migration risks, missing tests, and
+performance-shape problems.
+
+## Design and code standards
 
 ### Tests
 
-- Ensure that tests are intentional and provide real value. It is important to avoid tests that don't provide useful coverage or simply lock in unimportant implementation details
-- Tests commited to the codebase should be selected carefully with extreme selectivity & intetionality.
-- Tests should validate and guard core logic and flows.
+- Keep only intentional tests that guard important behavior.
+- Reject coverage that merely locks in implementation details.
+- Check asymmetry, absence, error paths, and the real integration boundary.
 
 ### UI
 
-- Ensure that UI uses visual hierarchy, reject over use of nested cards or boxes
-- Avoid overuse of eyebrows, overlines, and subtitles
-- Ensure that a consistent spacing scale is used, no arbitrary spacing unless a specific constraint requires it
-- Ensure that even if the UI was in a different language that the user couldn't read, the spacing & context would allow them to infer the primary actions & interactions
+- Use visual hierarchy and a consistent spacing scale.
+- Reject unnecessary nested cards, eyebrows, subtitles, and arbitrary spacing.
+- Ensure hierarchy and primary actions remain inferable without reading labels.
 
-### Obvious Solution Checklist
+### Obvious solution and erasure
 
-- Check that the change solves a demonstrated problem, not a hypothetical future need.
-- Flag speculative abstractions, configuration, extension points, and fallback behavior.
-- Look for a simpler solution that still provides the required functionality and performance.
-- Prefer established project patterns over clever or novel machinery.
-- Challenge indirection that does not reduce meaningful complexity.
-- Flag bolted-on special cases that suggest the underlying design is wrong.
-- Confirm complexity is justified by an actual constraint, requirement, or measured bottleneck.
-- Ensure simplification does not trade away correctness, functionality, performance, or maintainability.
-- Push back when the implementation overlooks a more direct and obvious approach.
-- Final question: **Is this the simplest complete solution to the problem we actually have?**
-
-### Erasure Review Checklist
-
-- Identify duplicated concepts, logic, abstractions, or sources of truth that should be unified.
-- Flag dead code, unused files, obsolete branches, stale compatibility paths, and redundant configuration.
-- Prefer reuse of existing code over introducing parallel helpers or abstractions.
-- Challenge additions that solve no demonstrated requirement.
-- Flag tangled or surprising code; confusion often indicates a poor abstraction.
-- Check whether the change fixes the root cause or merely shields the symptom with a special case.
-- For every `X → Y` replacement, verify `X` is fully removed unless compatibility was explicitly required.
-- Confirm obsolete syntax, behavior, APIs, flags, and data shapes are removed from:
-  - Implementation
-  - Tests and fixtures
-  - Documentation and examples
-  - Configuration and migrations
-- Ensure tests for superseded behavior were deleted or rewritten—not retained, skipped, or weakened.
-- Remove stale comments; rewrite only those still needed to explain intent.
-- Remove completed TODOs and references to resolved work.
-- Check for documentation describing decommissioned systems, retired workflows, or obsolete rules.
-- Verify links and references to deleted or renamed material were updated.
-- Prefer compression: fewer concepts, branches, files, and rules while preserving required behavior.
-- Treat deletion and simplification as valuable outcomes, not incidental cleanup.
-- Final question: **What did this change make obsolete, and was all of it removed?**
-
-## Agent Layout
-
-Spawn exactly five primary review subagents and, in parallel, one read-only Sol xhigh second-opinion subagent. Keep prompts short and independent. Give each reviewer the task and raw repo context it needs, but not your conclusions or another reviewer's output.
-
-Every spawn must set `fork_turns: "none"`; the scope contract in the prompt replaces conversation inheritance. Never rely on the full-history default.
-
-Use the same base model as the main agent for the five primary reviewers. The designated Sol xhigh second-opinion reviewer is the intentional model exception; do not introduce other model variation.
-
-Keep reasoning effort flexible, but favor the active setting from the main agent. Only raise or lower it when a specific review angle clearly benefits, and keep that choice intentional rather than using model variation as a review tactic.
-
-### Agents 1-2: Standard Review
-
-Ask each agent to review the current uncommitted changes and return prioritized findings only.
-
-Require:
-- include staged, unstaged, and untracked files
-- focus on bugs, regressions, risky edge cases, missing tests, and incorrect assumptions
-- cite file/line references when possible
-- keep the summary brief
-- consider not only issues in the implementation but the direction/high level design chosen itself
-
-Example prompt:
-
-`Review only this scope: reviewRoot=<absolute path>, diffExpr=<baseRef>...HEAD, changedFiles=<list>. First verify the root, base/head SHAs, and changed-file list. If they do not match, stop with scope mismatch. Read-only only. Return prioritized findings with file/line refs where possible. Focus on bugs, regressions, missing tests, and risky assumptions. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug.`
-
-### Agent 3: Complexity Fit Review
-
-Ask the agent to judge whether the implementation complexity fits the problem and the codebase.
-
-Require:
-- identify overbuilt and underbuilt areas
-- distinguish necessary complexity from speculative abstraction
-- call out missing simplifications or missing structure only when concrete
-- report only actionable findings
-
-Example prompt:
-
-`Assess only this scope: reviewRoot=<absolute path>, diffExpr=<baseRef>...HEAD, changedFiles=<list>. First verify the root, base/head SHAs, and changed-file list. Judge whether the changed implementation is overbuilt, underbuilt, or right-sized for this project. Return only actionable findings whose primary defect is in changedFiles.`
-
-### Agents 4-5: Target-Branch Deep Review
-
-Ask each agent to:
-
-1. infer the most likely merge target branch
-2. identify touched flows, data paths, functions, and call sites
-3. understand how those flows work on the target branch
-4. review the working tree changes in that context
-
-Require:
-- state the exact target branch assumption and why
-- compare changed behavior against target-branch behavior
-- look for missed updates, integration gaps, hidden side effects, and behavior drift
-- include file/line references when possible
-- for new files, inspect the nearest existing entry points and callers on the target branch
-
-Example prompt:
-
-`Review only this scope: reviewRoot=<absolute path>, diffExpr=<baseRef>...HEAD, changedFiles=<list>. First verify the root, base/head SHAs, and changed-file list. State the target branch assumption. Map the flows touched by changedFiles, inspect target behavior with git -C <reviewRoot> show <baseRef>:path as needed, then review the changes in that context. Return prioritized findings with file/line refs. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug.`
-
-### Parallel Sol xhigh Second Opinion
-
-Run the second-opinion subagent at the same time as the five primary reviewers, not after the initial swarm finishes.
-
-- Spawn with `model: "gpt-5.6-sol"`, `reasoning_effort: "xhigh"`, and `fork_turns: "none"`.
-- Keep it read-only and tightly scoped to the same immutable review contract.
-- Require exact root, base/head SHA, diff, and changed-file verification before review; stop with `scope mismatch` on any mismatch.
-- Ask it to inspect only the assigned diff, untracked files in scope, and directly relevant tests or subsystems at risk.
-- Do not share primary-reviewer findings, candidates, or conclusions; preserve independence.
-- Return prioritized findings only, with file/line references where possible.
-
-Default prompt:
-
-`Review only this assigned scope: reviewRoot=<absolute path>, baseRef=<baseRef>, headRef=<headRef>, diffExpr=<diffExpr>, changedFiles=<list>. First verify the review root, base/head SHAs, and changed-file list; stop with scope mismatch if they differ. Read-only. Focus on bugs, regressions, permissions/security, migrations, missing tests, and performance-shape issues in changedFiles. Do not report primary findings outside changedFiles unless citing unchanged support for a changed-file bug. Return prioritized findings only with file/line refs where possible.`
-
-## Target Branch Heuristics
-
-Use the smallest reliable heuristic set:
-
-1. Start with `git branch --show-current`.
-2. Check whether `develop`, `main`, or `master` exist locally or on `origin`.
-3. Default rules:
-   - if the current branch is `develop`, target `main` when it exists
-   - if the current branch is a feature or topic branch, target `develop` when it exists
-   - otherwise target `main` when it exists, then `master`
-4. If the repo state suggests something else, state the assumption explicitly instead of pretending certainty.
-
-When agents need target-branch file contents, prefer direct inspection such as `git show <target>:path/to/file` plus local call-site reads. Do not rely only on the current working tree.
+- Check that the change solves a demonstrated problem.
+- Prefer established project patterns and the simplest complete solution.
+- Flag speculative infrastructure, extension points, and fallback behavior.
+- Identify duplicated concepts, dead code, obsolete branches, compatibility
+  paths, stale comments, completed TODOs, and superseded tests/docs.
+- For every `X -> Y` replacement, verify `X` is fully removed unless explicitly
+  retained.
+- Ask: what did this change make obsolete, and was all of it removed?
 
 ## Consolidation
 
-After all five primary reviewers and the parallel Sol xhigh second opinion finish:
+After the selected mode's reviewers finish:
 
-1. Combine all findings into one list.
-2. Merge duplicates.
-3. Track agreement:
-   - note when multiple agents independently found the same issue
-   - note when a finding came from only one angle
-   - note material disagreement or uncertainty
-4. Re-rank by severity and confidence, not by which agent found it.
-5. Drop weak or purely stylistic comments unless they expose a real risk.
-   Also drop out-of-scope findings whose primary defect is outside the assigned
-   `changedFiles`, even if a reviewer found a real issue elsewhere.
-6. Create a candidate findings list. Do not send the final review yet.
-7. Track which findings came from the Sol xhigh second opinion alone versus from the five primary reviewers.
-8. If there are no candidate findings, skip the validation round and say there
-   are no findings.
+1. Merge duplicates and separate genuinely independent agreement from repeated
+   restatement.
+2. Re-rank by execution consequence, severity, and confidence—not reviewer
+   identity or vote count.
+3. Drop weak, stylistic, speculative, and out-of-scope findings.
+4. Record disagreements and negative coverage that materially affect confidence.
+5. Create the candidate list. Do not report it as final before validation.
 
-## Validation Round
+When an agent is interrupted or blocked, preserve its completed evidence before
+retrying. Prefer a follow-up to the same agent when possible. If replacement is
+required, give the replacement the usable raw evidence but not the interrupted
+agent's conclusion. Never pay for a complete restart merely because the first
+agent failed to format a final verdict.
 
-After consolidation and before the final answer, independently validate every candidate finding that may appear in the final review.
+## Validation
 
-1. Spawn one fresh independent validation subagent for the complete ordinary candidate list, with `fork_turns: "none"` and a compact brief containing for each candidate:
-   - where to look
-   - the suspected issue
-   - suspected severity / scope
-   - a request to confirm whether the issue is real, not real, or needs caveats
-2. Spawn a dedicated independent validator for an individual P0/P1 only when it involves security, authorization, destructive data changes, or similarly high-consequence behavior.
-3. Do not share reviewer identities, vote counts, or conclusions with validators; provide only the candidate evidence that needs checking.
-4. Drop findings that fail validation.
-5. Adjust severity, scope, and wording when validation narrows or expands the issue.
-6. Keep the final answer in code-review form: findings first, then open questions or assumptions, then a short coverage summary.
-7. If no findings survive validation, say so explicitly and mention residual risk or unreviewed areas.
+For a full, moved-head, or same-head review:
 
-## Output Contract
+1. Batch all ordinary candidates into one fresh independent validator.
+2. Add a dedicated validator only for an individual high-consequence P0/P1 as
+   defined above.
+3. Drop failed candidates and narrow severity/scope when evidence requires it.
+4. If no candidates exist, skip validation and report the residual coverage.
 
-Use this structure:
+Do not add a second validation round merely because the review mode reused prior
+history. Reuse a prior validation result only when the exact head and relevant
+code are unchanged.
+
+## Review receipt
+
+At completion, emit the compact receipt described in
+[references/review-history.md](references/review-history.md). Do not write it
+into the reviewed repository. Persist it through task history or memory only when
+the surrounding environment authorizes that write.
+
+The receipt is the cross-task deduplication boundary. It must be sufficient for a
+future coordinator to identify the exact reviewed head, completed coverage,
+surviving/dropped findings, validation status, and known gaps without loading raw
+review transcripts.
+
+## Output contract
+
+Use:
 
 - `Findings`
 - `Open questions / assumptions`
 - `Coverage`
+- `Review receipt`
 
-In `Findings`, each item should include:
+Each finding includes severity, concise defect, triggering conditions,
+consequence, smallest proportionate remedy, file reference, and independent
+agreement status.
 
-- severity
-- concise problem statement
-- why it matters
-- when/in what situations would the problem occur
-- file reference
-- whether it had multi-agent agreement
+Coverage includes:
 
-In `Coverage`, include:
+- selected mode and why;
+- receipt reused, if any;
+- exact base/head and changed-file scope;
+- reviewers run, skipped, interrupted, or replaced;
+- validation performed and candidates dropped/narrowed;
+- tests or live verification inspected;
+- residual gaps.
 
-- whether the full 5-agent swarm ran
-- whether the Sol xhigh second-opinion subagent ran in parallel with the swarm
-- which angles ran: standard x2, complexity x1, target-branch x2
-- whether ordinary findings were batch-validated and which high-consequence findings received dedicated validation
-- any findings dropped or materially changed after validation
-- any fallback or missing pass
-
-If subagents are unavailable for either the initial swarm or the validation
-round, fall back to the best available review and state exactly which coverage
-was reduced.
-
-## Example Requests
-
-- `Use $review-swarm to review the current uncommitted changes before I commit.`
-- `Use $review-swarm and tell me if these open changes are missing anything against develop.`
-- `Use $review-swarm to review my working tree and flag overbuilt parts.`
+If subagents are unavailable, perform the best available review and state the
+reduced coverage precisely.
