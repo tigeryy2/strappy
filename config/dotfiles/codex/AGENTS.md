@@ -30,7 +30,7 @@ keeping it in that large file is ok.
   - When asked to add comments to the PR, include code/file references or snippets, the explaination.
 - worktrees
   - Do not place large implementation focused worktrees in /private/tmp... only truely temporary or transient code should be placed in tmp
-- When commiting, if you can't sign the commit, try asking for sandbox approval first instead of allowing an unsigned commit
+- When commiting, if you can't sign the commit, exit the sandbox (ask for sandbox approval) which should work for signing
 - Github requests, tests, etc may require exiting the sandbox, request approvals whenver blocked
 - When asked to "eval" and check if review comments, findings, etc are real no need to use independent subagents for each.
   - Instead, use a single subagent for all of them
