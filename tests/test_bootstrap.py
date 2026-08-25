@@ -170,7 +170,7 @@ def test_install_codex_memory_helpers_links_search_script(tmp_path, monkeypatch)
 
     bootstrap.install_codex_memory_helpers()
 
-    destination = home / ".codex" / "memories" / "list_memories.py"
+    destination = home / ".local" / "bin" / "codex-memory-search"
     assert destination.is_symlink()
     assert destination.resolve() == source.resolve()
 

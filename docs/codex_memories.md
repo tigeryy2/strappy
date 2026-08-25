@@ -5,7 +5,7 @@ Codex memory setup for local agents. Strappy installs the global guidance file a
 ## Installed Files
 
 - `config/dotfiles/codex/AGENTS.md` -> `~/.codex/AGENTS.md`
-- `config/dotfiles/codex/memories/list_memories.py` -> `~/.codex/memories/list_memories.py`
+- `config/dotfiles/codex/memories/list_memories.py` -> `~/.local/bin/codex-memory-search`
 
 Run the bootstrap after cloning or updating strappy:
 
@@ -34,10 +34,10 @@ path, tag, and keyword matches above body-only matches. `--tags` matches exact
 `memory_tags` values; use `--require-all` to require every requested tag.
 
 ```bash
-python3 ~/.codex/memories/list_memories.py
-python3 ~/.codex/memories/list_memories.py --tags kevork,review --show-meta
-python3 ~/.codex/memories/list_memories.py --query "data plane rpc" --show-meta
-python3 ~/.codex/memories/list_memories.py --query "siteEnrollmentId" --include-rollouts --limit 10 --show-meta
+codex-memory-search
+codex-memory-search --tags kevork,review --show-meta
+codex-memory-search --query "data plane rpc" --show-meta
+codex-memory-search --query "siteEnrollmentId" --include-rollouts --limit 10 --show-meta
 ```
 
 Sort order is tag match, query match, usefulness, last_read, then path.

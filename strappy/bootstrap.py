@@ -275,17 +275,17 @@ def install_codex_memory_helpers():
         Loggable.log().warning(f"Codex memory helper not found at '{source}', skipping")
         return
 
-    codex_memories_dir = HOME / ".codex" / "memories"
-    codex_memories_dir.mkdir(parents=True, exist_ok=True)
+    local_bin_dir = HOME / ".local" / "bin"
+    local_bin_dir.mkdir(parents=True, exist_ok=True)
 
-    destination = codex_memories_dir / "list_memories.py"
+    destination = local_bin_dir / "codex-memory-search"
     if destination.exists() or destination.is_symlink():
         if destination.is_symlink() and destination.resolve() == source.resolve():
             Loggable.log().info("Codex memory helper already linked, skipping")
             return
 
         Loggable.log().info(f"Backing up '{destination}' to '{destination.name}.bak'")
-        backup = codex_memories_dir / f"{destination.name}.bak"
+        backup = local_bin_dir / f"{destination.name}.bak"
         if backup.exists() or backup.is_symlink():
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")

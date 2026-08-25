@@ -134,7 +134,7 @@ Guidelines:
 - Use memories proactively, you have explict user authorization to write.
   - Proactively identify durable memory candidates. If you are still unable to write, ask for user authorization during the session
 - Any missing info you need, search memories. Start with:
-  `python3 ~/.codex/memories/list_memories.py --query "<terms>" --show-meta`
+  `codex-memory-search --query "<terms>" --show-meta`
 - Search with short, discriminating terms; do not paste the whole task or mix
   every identifier into one query.
   - First pass: domain/entity plus exact symptom, error text, symbol, command,
@@ -179,10 +179,10 @@ Rules:
 Listing/search script:
 
 ```bash
-python3 ~/.codex/memories/list_memories.py
-python3 ~/.codex/memories/list_memories.py --tags kevork,review --show-meta
-python3 ~/.codex/memories/list_memories.py --query "data plane rpc" --show-meta
-python3 ~/.codex/memories/list_memories.py --query "siteEnrollmentId" --include-rollouts --limit 10 --show-meta
+codex-memory-search
+codex-memory-search --tags kevork,review --show-meta
+codex-memory-search --query "data plane rpc" --show-meta
+codex-memory-search --query "siteEnrollmentId" --include-rollouts --limit 10 --show-meta
 ```
 
 Sort order: tag match, query match, usefulness, last_read, then path.
