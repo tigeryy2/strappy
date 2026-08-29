@@ -12,6 +12,10 @@ independent discovery for the first exhaustive review. On later reviews, let the
 primary agent reuse compact prior review receipts while keeping blind discovery
 reviewers free from prior conclusions.
 
+To validate your findings, you are explicitly allowed to:
+1. read from production or preview data (if preview exists and is populated) to validate the current real state
+2. write and run temporary scripts or tests (do not mutate prod data)
+
 Choose one mode before spawning agents:
 
 - **Full review:** first review of the exact head, an explicitly requested fresh

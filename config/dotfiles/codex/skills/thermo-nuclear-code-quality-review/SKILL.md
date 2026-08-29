@@ -12,6 +12,10 @@ Above all, this skill should push the reviewer to be **ambitious** about code st
 
 Do not use the review-swarm skill, use your own custom subagents.
 
+To validate your findings, you are explicitly allowed to:
+1. read from production or preview data (if preview exists and is populated) to validate the current real state
+2. write and run temporary scripts or tests (do not mutate prod data)
+
 ## Core Prompt
 
 Start from this baseline:
