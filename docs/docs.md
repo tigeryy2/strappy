@@ -24,6 +24,8 @@ Strappy installs Codex config, global `AGENTS.md`, skills, rules, and memory hel
 
 Strappy links the same global `AGENTS.md` to `~/.grok/AGENTS.md` so Grok Build gets the home-level project rules file.
 
+It also links Codex skills (and Claude-only skills such as `make-interfaces-feel-better`) into `~/.grok/skills`. Overlapping names keep the Codex copy.
+
 ### tldr & tldr.inbrowser.app
 
 Clone [tldr.inbrowser.app](https://github.com/InBrowserApp/tldr.inbrowser.app) to

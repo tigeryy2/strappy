@@ -298,22 +298,19 @@ def install_codex_memory_helpers():
     destination.symlink_to(source)
 
 
-def install_codex_skills():
-    Loggable.log().info(f"\n{' Installing Codex Skills ':=^80}")
-
-    if DRY_RUN:
-        Loggable.log().info("Dry run, skipping Codex skills installation")
-        return
-
-    source_dir = DOTFILES_DIR / "codex" / "skills"
+def _link_skill_directories(
+    source_dir: Path,
+    destination_dir: Path,
+    label: str,
+    skip_existing: bool = False,
+) -> None:
     if not source_dir.exists():
         Loggable.log().warning(
-            f"Codex skills directory not found at '{source_dir}', skipping"
+            f"{label} skills directory not found at '{source_dir}', skipping"
         )
         return
 
-    codex_skills_dir = HOME / ".codex" / "skills"
-    codex_skills_dir.mkdir(parents=True, exist_ok=True)
+    destination_dir.mkdir(parents=True, exist_ok=True)
 
     for source in sorted(source_dir.iterdir()):
         if not source.is_dir():
@@ -322,18 +319,24 @@ def install_codex_skills():
             )
             continue
 
-        destination = codex_skills_dir / source.name
+        destination = destination_dir / source.name
         if destination.exists() or destination.is_symlink():
             if destination.is_symlink() and destination.resolve() == source.resolve():
                 Loggable.log().info(
-                    f"Codex skill '{source.name}' already linked, skipping"
+                    f"{label} skill '{source.name}' already linked, skipping"
+                )
+                continue
+
+            if skip_existing:
+                Loggable.log().info(
+                    f"{label} skill '{source.name}' already exists, skipping"
                 )
                 continue
 
             Loggable.log().info(
                 f"Backing up '{destination}' to '{destination.name}.bak'"
             )
-            backup = codex_skills_dir / f"{destination.name}.bak"
+            backup = destination_dir / f"{destination.name}.bak"
             if backup.exists() or backup.is_symlink():
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")
@@ -344,6 +347,41 @@ def install_codex_skills():
 
         Loggable.log().info(f"Creating symlink for '{destination}'")
         destination.symlink_to(source)
+
+
+def install_codex_skills():
+    Loggable.log().info(f"\n{' Installing Codex Skills ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Codex skills installation")
+        return
+
+    _link_skill_directories(
+        DOTFILES_DIR / "codex" / "skills",
+        HOME / ".codex" / "skills",
+        "Codex",
+    )
+
+
+def install_grok_skills():
+    Loggable.log().info(f"\n{' Installing Grok Skills ':=^80}")
+
+    if DRY_RUN:
+        Loggable.log().info("Dry run, skipping Grok skills installation")
+        return
+
+    grok_skills_dir = HOME / ".grok" / "skills"
+    _link_skill_directories(
+        DOTFILES_DIR / "codex" / "skills",
+        grok_skills_dir,
+        "Grok",
+    )
+    _link_skill_directories(
+        DOTFILES_DIR / "claude" / "skills",
+        grok_skills_dir,
+        "Grok",
+        skip_existing=True,
+    )
 
 
 def install_claude_settings():
@@ -388,45 +426,11 @@ def install_claude_skills():
         Loggable.log().info("Dry run, skipping Claude skills installation")
         return
 
-    source_dir = DOTFILES_DIR / "claude" / "skills"
-    if not source_dir.exists():
-        Loggable.log().warning(
-            f"Claude skills directory not found at '{source_dir}', skipping"
-        )
-        return
-
-    claude_skills_dir = HOME / ".claude" / "skills"
-    claude_skills_dir.mkdir(parents=True, exist_ok=True)
-
-    for source in sorted(source_dir.iterdir()):
-        if not source.is_dir():
-            Loggable.log().warning(
-                f"'{source.name}' is not a skill directory, skipping"
-            )
-            continue
-
-        destination = claude_skills_dir / source.name
-        if destination.exists() or destination.is_symlink():
-            if destination.is_symlink() and destination.resolve() == source.resolve():
-                Loggable.log().info(
-                    f"Claude skill '{source.name}' already linked, skipping"
-                )
-                continue
-
-            Loggable.log().info(
-                f"Backing up '{destination}' to '{destination.name}.bak'"
-            )
-            backup = claude_skills_dir / f"{destination.name}.bak"
-            if backup.exists() or backup.is_symlink():
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                _copy_path(backup, LOG_DIR / f"{backup.name}_{timestamp}")
-                _remove_path(backup)
-
-            _copy_path(destination, backup)
-            _remove_path(destination)
-
-        Loggable.log().info(f"Creating symlink for '{destination}'")
-        destination.symlink_to(source)
+    _link_skill_directories(
+        DOTFILES_DIR / "claude" / "skills",
+        HOME / ".claude" / "skills",
+        "Claude",
+    )
 
 
 def main():
@@ -445,6 +449,7 @@ def main():
     install_codex_config()
     install_codex_memory_helpers()
     install_codex_skills()
+    install_grok_skills()
     install_codex_rules()
     install_claude_settings()
     install_claude_skills()

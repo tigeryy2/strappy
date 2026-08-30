@@ -245,6 +245,67 @@ def test_install_claude_skills_links_repo_skill(tmp_path, monkeypatch):
     assert destination.resolve() == source.resolve()
 
 
+def test_install_grok_skills_links_codex_and_claude_unique_skills(
+    tmp_path, monkeypatch
+):
+    dotfiles_dir = tmp_path / "dotfiles"
+    deslop = dotfiles_dir / "codex" / "skills" / "deslop"
+    grilling = dotfiles_dir / "codex" / "skills" / "grilling"
+    claude_grilling = dotfiles_dir / "claude" / "skills" / "grilling"
+    ui = dotfiles_dir / "claude" / "skills" / "make-interfaces-feel-better"
+    _write_file(deslop / "SKILL.md", "# Deslop\n")
+    _write_file(grilling / "SKILL.md", "# Codex grilling\n")
+    _write_file(claude_grilling / "SKILL.md", "# Claude grilling\n")
+    _write_file(ui / "SKILL.md", "# UI\n")
+
+    home = tmp_path / "home"
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_grok_skills()
+
+    grok_skills = home / ".grok" / "skills"
+    assert (grok_skills / "deslop").is_symlink()
+    assert (grok_skills / "deslop").resolve() == deslop.resolve()
+    assert (grok_skills / "grilling").is_symlink()
+    assert (grok_skills / "grilling").resolve() == grilling.resolve()
+    assert (grok_skills / "make-interfaces-feel-better").is_symlink()
+    assert (grok_skills / "make-interfaces-feel-better").resolve() == ui.resolve()
+
+
+def test_install_grok_skills_backs_up_existing_directory(tmp_path, monkeypatch):
+    dotfiles_dir = tmp_path / "dotfiles"
+    source = dotfiles_dir / "codex" / "skills" / "deslop"
+    _write_file(source / "SKILL.md", "# Deslop\n")
+
+    home = tmp_path / "home"
+    existing = home / ".grok" / "skills" / "deslop"
+    _write_file(existing / "SKILL.md", "# Old\n")
+
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+
+    monkeypatch.setattr(bootstrap, "DOTFILES_DIR", dotfiles_dir)
+    monkeypatch.setattr(bootstrap, "HOME", home)
+    monkeypatch.setattr(bootstrap, "LOG_DIR", log_dir)
+    monkeypatch.setattr(bootstrap, "DRY_RUN", False)
+
+    bootstrap.install_grok_skills()
+
+    backup = home / ".grok" / "skills" / "deslop.bak"
+    destination = home / ".grok" / "skills" / "deslop"
+
+    assert backup.is_dir()
+    assert (backup / "SKILL.md").read_text() == "# Old\n"
+    assert destination.is_symlink()
+    assert destination.resolve() == source.resolve()
+
+
 def test_install_claude_skills_backs_up_existing_directory(tmp_path, monkeypatch):
     dotfiles_dir = tmp_path / "dotfiles"
     source = dotfiles_dir / "claude" / "skills" / "make-interfaces-feel-better"

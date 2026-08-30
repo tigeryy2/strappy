@@ -7,3 +7,4 @@ Managed dotfiles that the bootstrap process can install or sync.
 - codex/ - Codex rules and related configuration
 - claude/ - Claude Code settings and local skills
 - Codex `AGENTS.md` is also linked to `~/.grok/AGENTS.md` for Grok Build
+- Codex + Claude skills are also linked into `~/.grok/skills` (Codex wins on name collisions)
