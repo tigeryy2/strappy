@@ -5,19 +5,15 @@ Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
 
 - Use your own judgement. The user may be wrong, be missing context, have unknown unknowns. Push back, guide, provide context & other options.
 - Session Start: The primary agent reviews only task-relevant memories, docs, and past sessions needed to understand context and intent. Delegated agents receive a compact brief and do not repeat this discovery unless their assigned task specifically requires historical context.
-- Ideally keep files <~500 LOC; split/refactor as needed. If we're editing a large existing file and this is the repo convention,
-keeping it in that large file is ok.
 - New deps: quick health check (recent releases/commits, adoption). Be very careful with any dep version <3 days old.
-- Web: search early; quote exact errors; prefer 2024-2026 sources
-- Delete unused or obsolete files when your changes make them irrelevant (refactors, feature removals, etc.), and revert files only when the change is yours or explicitly requested. If a git operation leaves you unsure about other agents' in-flight work, stop and coordinate instead of deleting.
-- Before attempting to delete a file to resolve a local type/lint failure, stop and ask the user. Other agents are often editing adjacent files; deleting their work to silence an error is never acceptable without explicit approval.
+- Delete unused or obsolete files when your changes make them irrelevant (refactors, feature removals, etc.), and revert files only when the change is yours or explicitly requested.
 - Coordinate with other agents before removing their in-progress edits—don't revert or delete work you didn't author unless everyone agrees.
 - ABSOLUTELY NEVER run destructive git operations (e.g., git reset --hard, rm, git checkout/git restore to an older commit) unless the user gives an explicit, written instruction in this conversation. Treat these commands as catastrophic; if you are even slightly unsure, stop and ask before touching them. (When working within Cursor or Codex Web, these git limitations do not apply; use the tooling's capabilities as needed.)
 - Never use git restore (or similar commands) to revert files you didn't author—coordinate with other agents instead so their in-progress work stays intact.
 - Keep commits atomic: commit only the files you touched and list each path explicitly. For tracked files run git commit -m "<scoped message>" -- path/to/file1 path/to/file2. For brand-new files, use the one-liner git restore --staged :/ && git add "path/to/file1" "path/to/file2" && git commit -m "<scoped message>" -- path/to/file1 path/to/file2.
 - Quote any git paths containing brackets or parentheses (e.g., src/app/[candidate]/**) when staging or committing so the shell does not treat them as globs or subshells.
 - When running git rebase, avoid opening editors—export GIT_EDITOR=: and GIT_SEQUENCE_EDITOR=: (or pass --no-edit) so the default messages are used automatically.
-- Write code (and comments/docs) that are well understandable by other agents and humans. Explain the intent of things if they are hard to understand or complex.
+- Write code and design systems(and comments/docs) that are well understandable by other agents and humans. Explain the intent of things if they are hard to understand or complex. Care about maintainability.
 - Plan docs in memory should be kept "live". Update the plan in memory as we implement and make decisions.
 - Reviewing PRs and code
   - Treat review output as advisory. Never blindly apply it.
@@ -28,24 +24,21 @@ keeping it in that large file is ok.
   - Validate ordinary candidate findings together in one independent batch. Use a dedicated validator only for an individual P0/P1 involving security, authorization, destructive data changes, or similarly high-consequence behavior.
   - For the final list of valid issues, explain when the issue would occur or cause issues
   - When asked to add comments to the PR, include code/file references or snippets, the explaination.
-- worktrees
-  - Do not place large implementation focused worktrees in /private/tmp... only truely temporary or transient code should be placed in tmp
+- Do not place large implementation focused worktrees in /private/tmp... only truely temporary or transient code should be placed in tmp
 - When commiting, if you can't sign the commit, exit the sandbox (ask for sandbox approval) which should work for signing
 - Github requests, tests, etc may require exiting the sandbox, request approvals whenver blocked
 - When asked to "eval" and check if review comments, findings, etc are real no need to use independent subagents for each.
   - Instead, use a single subagent for all of them
 
 ## Testing & Verification
-- When coding, prefer end-to-end verify and TDD. Tests/verification are to be split between
-  - Temporary TDD Unit tests: place these in gitignored /tmp or use `uv run python -c "..."`. This is your way to SEE and verify what actually happens.
-    - In particular focus on edge cases. Make sure these don't get committed accidentally by using a gitignored tmp or 'uv run...'
-  - Manual end-to-end verfication, with real data, browsers, etc when possible. Use browser & computer use, fetch real data, verify that the behavior matches the intent
-  - Purpose write or promote tests to the comitted test suite carefully, with extreme selectivity & intentionality. These tests should validate and guard core logic and flows.
-- If blocked on verification, say what's missing.
+- Temporary TDD Unit tests: place these in gitignored /tmp or use `uv run python -c "..."`. This is your way to SEE and verify what actually happens.
+  - In particular focus on edge cases. Make sure these don't get committed accidentally by using a gitignored tmp or 'uv run...'
+- Manual end-to-end verfication, with real data, browsers, etc when possible. Use browser & computer use, fetch real data, verify that the behavior matches the intent
+- Purpose write or promote tests to the comitted test suite carefully, with extreme selectivity & intentionality.
 
 ## UI: Layout and spacing
 - Strongly prefer **shadcn/ui** components.
-- We want sleek, beautiful UI with excellent UX. Use imagegen to generate UI inspiration when we are designing UIs.
+- We want sleek, beautiful UI with excellent UX.
 - Use visual hierarchy, whitespace, spacing, alignment, grouping, typography design, spatial organization to make relationships legible and intuitive
   - Even if the UI was in a different language that the user couldn't read, they should still be able to infer the primary actions & interactions
 - Use a consistent spacing scale. Avoid arbitrary spacing unless a component constraint requires it.
@@ -102,21 +95,6 @@ Prose rots the same way: every AGENTS.md, MEMORY.txt and wiki article tends to o
 * Prefer Python `dataclasses` over manually written `__init__` methods.
 * Prefer Pydantic `BaseModel` for complex data structures, especially those related to the database or API.
 * Format code before committing
-* For one off scripts / code execution / etc can just use uv
-
-## Subagent Review
-
-* Strategically use subagents to get a second opinion for:
-  * Complex planning
-  * High risk implementation
-  * Review against plans for complex/high risk
-* Note that these are long running... so do so strategically (e.g. at only the most important moments)
-* Use Sol Max
-* Review and consider the feedback
-* It is expected that review may take quite some time to respond. Generally you should allow it to finish unless it is actually stuck/hung.
-* Every spawn must set `fork_turns` explicitly. Use `"none"` for a self-contained brief or the smallest bounded recent-turn window that carries essential conversational context; never rely on the full-history default.
-* The primary agent loads applicable skills, AGENTS instructions, memories, and past-session context. Pass each subagent the exact target, paths, constraints, and expected output it needs. Do not ask subagents to reload those sources unless their task specifically depends on them.
----
 
 # Task Updates
 
