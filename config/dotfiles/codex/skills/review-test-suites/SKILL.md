@@ -1,75 +1,79 @@
 ---
 name: review-test-suites
-description: Review and clean up tests for durable, high-value behavioral coverage. Use during pull-request, branch, commit, working-tree, or code reviews to assess only tests and coverage relevant to the change; when asked to improve, simplify, consolidate, relocate, or remove tests; or when the user explicitly requests a full-repository test-suite audit. Never expand a change-focused review into a repository-wide test sweep without an explicit request.
+description: Coordinate a small team of test-review subagents, or act as one, to identify low-signal, implementation-coupled, flaky, or disproportionately slow tests and agree on focused cleanup. Use for PR, branch, commit, working-tree, or named-subsystem test reviews and cleanup. Audit the entire repository only when explicitly requested.
 ---
 
 # Review Test Suites
 
-## Set the scope
+Use read-only scouts to find candidates, then discuss the evidence with the main agent before removing or changing tests. Optimize for durable behavioral coverage per unit of maintenance and runtime cost, not test count or deletion quotas.
+
+## Roles and scope
+
+**Main agent:** establish the scope and shared context, delegate inspection, reconcile recommendations with the scouts, and own the final cleanup decision and verification.
+
+**Scout subagent:** inspect only the assigned scope, report evidence and recommendations, and participate in follow-up discussion. During inspection, do not edit files or spawn more agents. If this skill is assigned as one lane of a broader review, follow that coordinator's scope and return findings to it; do not start another team.
 
 Choose the narrowest scope supported by the request:
 
-- For a PR, branch, commit, patch, or working-tree review, inspect changed tests and the tests needed to protect changed behavior. Respect any pinned base, head, diff, and changed-file contract from the parent review. Read nearby unchanged tests only as supporting context.
-- For a named path or subsystem, stay within that behavior and its directly related tests.
-- Audit the overall test suite only when the user explicitly requests a full, overall, entire-repository, or equivalent sweep. Do not initiate one merely because broader cleanup opportunities exist.
+- For a PR, branch, commit, patch, or working-tree review, inspect changed tests and tests protecting changed behavior. Honor the parent's pinned base, head, diff, and changed-file contract. Read nearby unchanged tests and production code as supporting context; do not turn them into an unrelated cleanup backlog.
+- For a named path or subsystem, stay within its behavior and directly related tests.
+- Audit the whole repository only when explicitly requested.
 
-If this skill is one lane in a broader review, return test-specific findings to that review. Do not duplicate production-code findings except where necessary to explain a coverage defect.
+Keep review-only work read-only. A request to use this skill does not by itself authorize cleanup, commits, or PR publication.
 
-## Establish the contract
+## Delegate inspection
 
-1. Read repository guidance, test configuration, and documented test commands.
-2. Identify canonical test locations and intended unit, integration, and end-to-end boundaries.
-3. Trace the relevant production behavior before judging its tests. Determine the user-visible outcome, business rule, invariant, and failure modes.
-4. Run focused tests or perform read-only checks needed to validate each suspected problem. Treat a passing test as evidence of execution, not evidence that it protects the right contract.
+The main agent reads relevant repository guidance, test configuration, canonical test locations, and documented commands once. Give scouts a compact brief with the exact scope, shared guidance, relevant production entrypoints, allowed checks, and review-only or cleanup mode. Scouts verify local details as needed without repeating broad discovery.
 
-## Judge test value
+Use a small team, usually two or three scouts. Divide by coherent test areas, or use complementary lenses on a small shared scope:
 
-Prefer tests that are:
+- **Signal and coupling:** tautologies, tests that mirror implementation, mock-only wiring, brittle assertions, and obsolete assumptions.
+- **Coverage and redundancy:** duplicated contracts, stronger surviving coverage, missing consequential boundaries, and what each proposed deletion would lose.
+- **Reliability and cost:** order dependence, timing races, uncontrolled external dependencies, expensive fixtures, repeated setup, and runtime out of proportion to coverage value.
 
-- **Contract-focused:** protect outcomes and invariants rather than implementation shape.
-- **Boundary-driven:** exercise real executors, persistence, transforms, routes, and other consequential boundaries.
-- **Composed:** cover interactions where individually correct components can conflict.
-- **Realistic and failure-oriented:** include ambiguity, retries, conflicts, partial writes, stale state, identity mismatches, and representative false positives or negatives.
-- **Selective and economical:** keep only assertions and cases that guard meaningful regressions; delete weaker cases once stronger coverage subsumes them.
-- **Stable:** tolerate harmless wording, styling, ordering, formatting, and refactoring changes.
-- **Minimally mocked:** fake true external boundaries while keeping internal collaboration real.
-- **Table-driven:** consolidate equivalent cases so edge coverage is visible.
-- **User-visible where appropriate:** assert accessibility, navigation, decisions, and essential language rather than CSS or generated markup.
-- **Clear and canonical:** make the business rule legible through the name, fixture, action, and expected result; place tests where maintainers expect to find and run them.
+Scale assignments to the work; do not invent extra scope to occupy agents. When a parent already provides reviewers, use that team for discussion. If delegation is unavailable, perform the same checks directly and disclose that no subagent agreement occurred.
 
-Treat these as warning signs:
+## Inspect and substantiate
 
-- Assertions against graph node names, private helpers, call order, exact skeleton counts, CSS classes, generated HTML, or other implementation details.
-- Large sets of prompt, message, or copy substring assertions that lock prose without protecting a required language contract.
-- Mock-heavy wiring tests that prove calls occurred while bypassing real component collaboration.
-- Overlapping positive and negative assertion shotguns where a few durable contracts would suffice.
-- Thorough helper tests with no coverage of the real execution, write, or persistence boundary.
-- Happy-path-only fixtures that omit plausible ambiguity, conflicts, and false matches.
-- Repetitive standalone cases that obscure an equivalent table-driven rule.
-- Exact ordering, counts, formatting, markup, or intermediate values treated as requirements without product evidence.
-- Independently tested components with no composed coverage at their conflict points.
-- Tests outside the repository's canonical test tree without a documented reason.
-- Tests that preserve obsolete assumptions, codify a defect, or pass while the real behavior remains broken.
+Trace the relevant production behavior before judging a test: user-visible outcome, business rule, invariant, execution or persistence boundary, and plausible failure modes. A passing test proves execution, not that it protects the right contract.
 
-Confirm whether precision is intentional before criticizing it. Exact copy, order, markup, call sequence, or counts can be valid contracts when accessibility, protocols, compliance, snapshots, migrations, or explicit product requirements depend on them.
+Look for:
 
-## Review or clean up
+- Assertions against private helpers, graph nodes, call order, skeleton counts, CSS classes, generated markup, or intermediate values without a product contract.
+- Prompt or copy substring shotguns; mocks that bypass the collaboration being tested; expected results computed with the same logic as production.
+- Duplicate cases or snapshots that add no distinct regression protection; obsolete behavior; tests that pass while the real boundary remains broken.
+- Reliance on wall-clock timing, sleeps, shared mutable state, test order, randomness, network availability, or environment-specific resources.
+- Repeated costly setup, broad integration runs for a narrow rule, or large fixtures with little additional coverage.
 
-For a review-only request:
+These are leads, not verdicts. Exact copy, order, counts, markup, and calls can be required by accessibility, protocols, compliance, migrations, or explicit product requirements. Integration tests and large fixtures can justify their cost. Prefer minimally mocked, realistic coverage of meaningful outcomes, composed behavior, and failure paths.
 
-1. Report only concrete, actionable findings.
-2. For each finding, cite the test and relevant production boundary, explain the regression that can escape or the false confidence created, and describe when it matters.
-3. Rank behavior gaps above maintainability smells. Do not report taste-only rewrites.
-4. Recommend deletion only when the test is redundant or obsolete, or when stronger replacement coverage is specified.
+Use focused tests, existing CI history, timings, or read-only code analysis to substantiate candidates. Report what was observed and what remains a hypothesis. Do not call a test flaky because of one failure, or slow solely because of its size or test type. Avoid unbounded reruns or benchmarks.
 
-For an implementation or cleanup request:
+For each actionable candidate, return:
 
-1. Add or strengthen the behavioral, boundary, or composed test first when removing a weaker test would create a gap.
-2. Consolidate duplicated cases and assertions; remove obsolete fixtures, mocks, helpers, snapshots, and tests made redundant by the stronger contract.
-3. Relocate tests only after confirming the canonical tree and updating imports, discovery configuration, and documentation that actually requires the old location.
-4. Keep changes focused. Do not redesign production code merely to make testing easier unless the user requested that work and the design defect is demonstrated.
-5. Run the smallest relevant test command, then the broader affected suite when practical. Report commands and anything not verified.
+- Test file/line and relevant production boundary; the contract the test is intended to protect.
+- Concrete weakness and when it causes false confidence, maintenance churn, intermittent failure, or excessive cost; include evidence and check results.
+- Proposed action: keep, delete, consolidate, or repair. For deletion, identify stronger surviving coverage by reference, explain why the behavior is obsolete, or demonstrate that the test protects no meaningful contract.
+- Unique coverage at risk, any prerequisite replacement, related fixtures/mocks/helpers/snapshots that become unused, and uncertainty or counterarguments.
+
+An empty candidate list is valid. Do not manufacture findings, or expand into unrelated production-code review.
+
+## Discuss and decide before editing
+
+The main agent consolidates duplicate candidates and checks recommendations against implementation intent and the actual coverage. Send the proposed dispositions, supporting evidence, and open questions back to the scouts. Ask them to challenge the deletion rationale, identify lost coverage, and confirm or revise the associated cleanup. This is a discussion, not a vote or automatic acceptance of scout output.
+
+Resolve ordinary candidates together in one discussion batch. Investigate further only where a concrete disagreement warrants it. Before a change, the main agent and the relevant scouts must agree on the disposition and any prerequisite coverage or cleanup. Keep or defer unresolved candidates and explain the disagreement; do not force consensus or delete while the decision is pending. Lack of a response is not agreement.
+
+For review-only work, stop with the agreed recommendations and any unresolved candidates. For cleanup work, proceed with the agreed changes within the user's authorized scope; scout consensus does not grant additional authority.
+
+## Clean up and verify
+
+1. Where a candidate protects a meaningful contract that would otherwise be lost, establish stronger behavioral coverage first. Do not add a replacement merely to preserve a tautology, obsolete behavior, or test count.
+2. Make the agreed deletions, consolidations, or repairs. Remove fixtures, mocks, helpers, snapshots, and imports made unused by those changes; check for other consumers first. Delegate edits only with explicit, non-overlapping ownership.
+3. Prefer fixing a valuable flaky or slow test's cause over deleting its unique coverage, disabling it, adding retries, or inflating timeouts. Consolidate equivalent cases only when the distinct failure paths remain legible.
+4. Relocate tests only when needed to follow repository conventions, updating imports and discovery configuration. Do not redesign production code merely to simplify tests unless that work was requested and justified.
+5. Run the smallest affected test command, then the broader affected suite when practical. Check that surviving coverage still exercises the intended contract, not merely that fewer tests pass.
 
 ## Output
 
-Lead with findings, highest severity first. Use file and line references where possible. State explicitly when no actionable findings remain. Finish with a short scope and verification summary; for cleanup work, include what was consolidated or deleted and why.
+Lead with agreed actionable findings or completed cleanup, most consequential first. Include file references, the triggering conditions, the decision, and surviving or replacement coverage. State explicitly when there are no actionable findings. Finish with concise scope and verification results, any deferred disagreements, and what was removed or consolidated and why. Distinguish measured flakiness or cost from unverified suspicions; do not claim agreement or validation that did not occur.
