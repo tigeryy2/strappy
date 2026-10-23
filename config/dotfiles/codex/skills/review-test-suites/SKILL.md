@@ -1,11 +1,19 @@
 ---
 name: review-test-suites
-description: Coordinate a small team of test-review subagents, or act as one, to identify low-signal, implementation-coupled, flaky, or disproportionately slow tests and agree on focused cleanup. Use for PR, branch, commit, working-tree, or named-subsystem test reviews and cleanup. Audit the entire repository only when explicitly requested.
+description: Coordinate test-review subagents, or act as one, to retain only the most important, high-signal, stable coverage and agree on removing low-value, implementation-coupled, flaky, or disproportionately costly tests. Use for PR, branch, commit, working-tree, or named-subsystem test reviews and cleanup. Audit the entire repository only when explicitly requested.
 ---
 
 # Review Test Suites
 
-Use read-only scouts to find candidates, then discuss the evidence with the main agent before removing or changing tests. Optimize for durable behavioral coverage per unit of maintenance and runtime cost, not test count or deletion quotas.
+Use read-only scouts to find candidates, then discuss the evidence with the main agent before removing or changing tests. Aim for a small, stable suite containing only the highest-signal tests for the most important behavior. Full coverage is not a goal.
+
+## Select only high-signal coverage
+
+Keep or add a test only when it reliably catches a concrete, consequential regression and contributes enough beyond the retained suite to justify its maintenance and runtime cost. Prioritize critical user workflows, authorization, data integrity, and important business rules. Use realistic failure likelihood and impact, not hypothetical completeness, to choose cases.
+
+Unique coverage is not automatically valuable. Low-impact edge cases, incidental branches, and exhaustive input permutations can be left untested; delete low-value tests without replacing them. Lower line or branch coverage is acceptable. Do not add tests merely to close coverage gaps, preserve test counts, or compensate for every deletion.
+
+Stability is part of signal: a test that frequently fails for unrelated reasons obscures real regressions. For important behavior, prefer a deterministic test at the narrowest boundary that actually proves the contract. Preserve broader integration coverage only where that interaction adds substantial protection.
 
 ## Roles and scope
 
@@ -28,7 +36,7 @@ The main agent reads relevant repository guidance, test configuration, canonical
 Use a small team, usually two or three scouts. Divide by coherent test areas, or use complementary lenses on a small shared scope:
 
 - **Signal and coupling:** tautologies, tests that mirror implementation, mock-only wiring, brittle assertions, and obsolete assumptions.
-- **Coverage and redundancy:** duplicated contracts, stronger surviving coverage, missing consequential boundaries, and what each proposed deletion would lose.
+- **Risk and redundancy:** the most important regressions, each test's added protection beyond the retained suite, and whether lost coverage is worth preserving.
 - **Reliability and cost:** order dependence, timing races, uncontrolled external dependencies, expensive fixtures, repeated setup, and runtime out of proportion to coverage value.
 
 Scale assignments to the work; do not invent extra scope to occupy agents. When a parent already provides reviewers, use that team for discussion. If delegation is unavailable, perform the same checks directly and disclose that no subagent agreement occurred.
@@ -53,14 +61,14 @@ For each actionable candidate, return:
 
 - Test file/line and relevant production boundary; the contract the test is intended to protect.
 - Concrete weakness and when it causes false confidence, maintenance churn, intermittent failure, or excessive cost; include evidence and check results.
-- Proposed action: keep, delete, consolidate, or repair. For deletion, identify stronger surviving coverage by reference, explain why the behavior is obsolete, or demonstrate that the test protects no meaningful contract.
-- Unique coverage at risk, any prerequisite replacement, related fixtures/mocks/helpers/snapshots that become unused, and uncertainty or counterarguments.
+- Proposed action: keep, delete, consolidate, or repair. Justify its value against regression likelihood, impact, stability, cost, and existing coverage. Deletion may be justified by stronger surviving coverage, obsolete behavior, or insufficient value even if the coverage is unique.
+- Important coverage at risk and any justified replacement; explicitly identify low-value coverage that can be dropped. Include related fixtures/mocks/helpers/snapshots that become unused, and uncertainty or counterarguments.
 
 An empty candidate list is valid. Do not manufacture findings, or expand into unrelated production-code review.
 
 ## Discuss and decide before editing
 
-The main agent consolidates duplicate candidates and checks recommendations against implementation intent and the actual coverage. Send the proposed dispositions, supporting evidence, and open questions back to the scouts. Ask them to challenge the deletion rationale, identify lost coverage, and confirm or revise the associated cleanup. This is a discussion, not a vote or automatic acceptance of scout output.
+The main agent consolidates duplicate candidates and checks recommendations against implementation intent and the high-signal selection criteria. Send the proposed dispositions, supporting evidence, and open questions back to the scouts. Ask them to challenge the deletion rationale, distinguish important protection from low-value lost coverage, and confirm or revise the associated cleanup. This is a discussion, not a vote or automatic acceptance of scout output.
 
 Resolve ordinary candidates together in one discussion batch. Investigate further only where a concrete disagreement warrants it. Before a change, the main agent and the relevant scouts must agree on the disposition and any prerequisite coverage or cleanup. Keep or defer unresolved candidates and explain the disagreement; do not force consensus or delete while the decision is pending. Lack of a response is not agreement.
 
@@ -68,9 +76,9 @@ For review-only work, stop with the agreed recommendations and any unresolved ca
 
 ## Clean up and verify
 
-1. Where a candidate protects a meaningful contract that would otherwise be lost, establish stronger behavioral coverage first. Do not add a replacement merely to preserve a tautology, obsolete behavior, or test count.
+1. Establish replacement coverage first only when deletion would lose important, high-signal regression protection. Drop low-value coverage without replacement, even when unique.
 2. Make the agreed deletions, consolidations, or repairs. Remove fixtures, mocks, helpers, snapshots, and imports made unused by those changes; check for other consumers first. Delegate edits only with explicit, non-overlapping ownership.
-3. Prefer fixing a valuable flaky or slow test's cause over deleting its unique coverage, disabling it, adding retries, or inflating timeouts. Consolidate equivalent cases only when the distinct failure paths remain legible.
+3. For important behavior, repair or replace a flaky or costly test with stable, economical coverage; do not mask failures with retries or inflated timeouts. Otherwise remove it. Consolidate equivalent cases, retaining only failure paths that meet the high-signal criteria.
 4. Relocate tests only when needed to follow repository conventions, updating imports and discovery configuration. Do not redesign production code merely to simplify tests unless that work was requested and justified.
 5. Run the smallest affected test command, then the broader affected suite when practical. Check that surviving coverage still exercises the intended contract, not merely that fewer tests pass.
 

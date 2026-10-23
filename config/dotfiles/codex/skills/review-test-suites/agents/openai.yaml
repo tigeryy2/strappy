@@ -1,4 +1,4 @@
 interface:
   display_name: "Review Test Suites"
-  short_description: "Coordinate scouts and agree on valuable test cleanup"
-  default_prompt: "Use $review-test-suites to coordinate a small team of test scouts, discuss their findings, and agree on focused cleanup within the requested scope."
+  short_description: "Keep only important, high-signal, stable tests"
+  default_prompt: "Use $review-test-suites to coordinate test scouts and agree on a small, stable suite protecting the most important behavior, without pursuing full coverage."
