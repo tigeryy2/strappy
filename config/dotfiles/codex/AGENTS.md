@@ -70,6 +70,8 @@ Prose rots the same way: every AGENTS.md, MEMORY.txt and wiki article tends to o
 
 # Tools
 
+- For scripted HTTP requests, use a generic User-Agent such as `http-client/1.0`, without user, customer, project, task, or machine details.
+
 ## Wait efficiently for external state
 
   - Resolve the exact target and terminal predicates first: immutable SHA, run ID, job ID, deployment revision, URL, artifact, success condition, and failure condition.
