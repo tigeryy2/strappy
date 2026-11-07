@@ -46,7 +46,8 @@ Coverage:
 - completed: <blind lanes and continuity lanes>
 - validation: <ordinary batch and dedicated high-consequence checks>
 - missing/interrupted: <anything not completed>
-- verification: <tests, CI, runtime or live evidence actually inspected>
+- verification: <ad hoc probe commands and expected/observed results; existing tests, CI or live evidence>
+- authorization: <handoffs and allowed/denied paths checked; runtime vs source-only evidence>
 
 Findings:
 - <stable id>: <valid|caveated|fixed|surviving|dropped>; <severity>; <location>;

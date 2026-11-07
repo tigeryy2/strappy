@@ -7,14 +7,15 @@ description: Review open code changes with an independent multi-agent swarm, his
 
 ## Overview
 
-Run a read-only, evidence-backed review of the exact assigned change set. Preserve
-independent discovery for the first exhaustive review. On later reviews, let the
-primary agent reuse compact prior review receipts while keeping blind discovery
-reviewers free from prior conclusions.
+Run a read-only, evidence-backed review of the exact assigned change set for
+concrete bugs, regressions, integration failures, and authorization defects.
+Preserve independent discovery for the first exhaustive review. On later reviews,
+let the primary agent reuse compact prior review receipts while keeping blind
+discovery reviewers free from prior conclusions.
 
-To validate your findings, you are explicitly allowed to:
-1. read from production or preview data (if preview exists and is populated) to validate the current real state
-2. write and run temporary scripts or tests (do not mutate prod data)
+Validate logic and interactions with focused ad hoc tests as described below.
+Read production or populated preview data through authorized access when needed
+to verify real state; do not mutate production data.
 
 Choose one mode before spawning agents:
 
@@ -47,8 +48,9 @@ Do not make every reviewer repeat this work.
    head, or a directly preceding head. Do not broadly load raw prior transcripts.
 5. Select the review mode using the rules above. State the mode and why before
    spawning reviewers.
-6. Keep the review read-only. Do not edit files, stage changes, or run destructive
-   git commands.
+6. Keep reviewed source read-only. Temporary test harnesses belong outside the
+   tracked tree or in verified ignored scratch space. Do not stage changes or run
+   destructive git commands.
 7. The primary reads applicable AGENTS instructions, skills, memories, and
    historical context. Reviewers receive compact briefs and do not repeat that
    discovery unless their assigned lens explicitly requires it.
@@ -160,14 +162,63 @@ This is validation, not discovery.
 4. Do not launch the full six-agent discovery swarm unless the user separately
    requests a full review.
 
+## Bugs, authorization, and interaction checks
+
+Apply these checks within the selected review scope in every mode. Assign the
+relevant flows to existing reviewers and include these requirements in their
+briefs; no additional swarm or validation round is needed.
+
+### Trace authorization between tools
+
+- Follow the real caller through tool dispatch, nested tool/service calls, and
+  the final read, write, or returned result. Identify the acting principal,
+  tenant, resource/action scope, and enforcement point at each handoff.
+- Verify authorization context is preserved or explicitly reauthorized. Check
+  that caller/model-supplied arguments, resource handles, or service credentials
+  cannot silently replace identity or broaden permissions. Include delegated or
+  queued work, retries, and result/artifact access when the changed flow uses them.
+- Check allowed and denied paths at the enforcing boundary. Exercise relevant
+  missing/forged context, cross-tenant or unauthorized resource IDs, and stale or
+  revoked permissions. A hidden UI control, tool registration, or successful
+  upstream check does not prove a downstream operation is authorized.
+- Verify denial prevents protected reads, output disclosure, and side effects;
+  verify legitimate callers still succeed. Trace failures and fallbacks for
+  accidental bypasses as well as incorrect denials.
+
+### Run custom ad hoc tests and debug scripts
+
+- For changed executable behavior, write and run focused temporary tests and
+  debug scripts. Their purpose is to exercise real flows, verify behavior, and
+  uncover bugs in the logic and interactions between components. Derive cases
+  from the intended contract and plausible failure paths, including when no
+  finding has emerged. Existing suites supplement this investigation.
+- Exercise the actual implementation and connected caller/callee path. Import
+  real functions or invoke real entry points; keep authorization checks and
+  relevant transformations intact. Mock only external dependencies as needed,
+  and state what the harness cannot establish. A rewritten copy of the algorithm
+  or a mocked-away permission check is not evidence about the implementation.
+- Choose high-signal cases for the touched flow: boundary or missing inputs,
+  conflicting state, partial failures, retries/order, and allowed/denied
+  authority propagation. Check observable outputs and side effects across the
+  interaction, including absence of protected effects on denial.
+- Record the hypothesis, command, expected behavior, and observed result. When
+  useful, compare base and head or use a negative control to show that the probe
+  detects the suspected failure. Distinguish executed probes from proposed tests.
+- Keep probes temporary; adding committed regression coverage is a separate
+  implementation decision. Stay within current environment/access permissions.
+  If execution is blocked, state the exact gap and retain source evidence without
+  claiming runtime verification. For documentation-only changes, state why
+  runtime probes are inapplicable. Reuse same-head probe results only when their
+  code, inputs, and relevant environment still match.
+
 ## Full-review lenses
 
 ### Standard reviewers
 
 Focus on bugs, regressions, risky edge cases, missing tests, incorrect
 assumptions, and whether the direction itself is sound. Include staged,
-unstaged, and untracked files where applicable. Return prioritized findings only,
-with file/line references when possible.
+unstaged, and untracked files where applicable. Return prioritized findings with
+file/line references, plus a compact record of checks run and coverage gaps.
 
 ### Complexity-fit reviewer
 
@@ -280,8 +331,10 @@ Coverage includes:
 - exact base/head and changed-file scope;
 - reviewers run, skipped, interrupted, or replaced;
 - validation performed and candidates dropped/narrowed;
-- tests or live verification inspected;
-- residual gaps.
+- ad hoc probes actually run, their expected/observed results, and existing
+  tests or live verification inspected;
+- authorization handoffs checked, including allowed/denied behavior;
+- residual gaps, including blocked or inapplicable execution.
 
 If subagents are unavailable, perform the best available review and state the
 reduced coverage precisely.
